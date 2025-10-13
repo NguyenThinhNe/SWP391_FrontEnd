@@ -1,0 +1,98 @@
+/* Sidebar layout and styles */
+.sidebar {
+  width: 220px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #ffffff;
+  border-right: 1px solid #e6e9ef;
+  padding: 24px 18px;
+  box-sizing: border-box;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.brand-mark{
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(90deg,#111827,#6b7280);
+  color: white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:6px;
+  font-weight:700;
+}
+.brand-name {
+  font-weight: 700;
+  color: var(--muted-text);
+}
+
+.sidebar-nav ul{
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  border: none;
+  background: transparent;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-align:left;
+  cursor: pointer;
+  color: var(--muted-text);
+  font-weight:600;
+}
+.nav-item .icon{width:22px}
+.nav-item:hover{background:#f3f4f6}
+
+.active .nav-item{
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.sidebar-bottom{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.user{display:flex;align-items:center;gap:10px}
+.avatar{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:var(--primary);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+}
+.logout{display:flex;align-items:center;gap:8px;border:none;background:transparent;color:var(--muted-text);cursor:pointer;padding:6px}
+
+/* Layout helper for pages */
+.app-with-sidebar{
+  display:flex;
+  min-height:100vh;
+}
+.main-content{
+  flex:1;
+  padding:28px;
+}
+
+@media (max-width: 720px){
+  .sidebar{display:none}
+}
