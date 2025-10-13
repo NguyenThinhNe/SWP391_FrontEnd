@@ -1,34 +1,27 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Sidebar from './components/Sidebar'
 import './App.css'
+import './components/sidebar.css'
+import Dashboard from './pages/Dashboard'
+import ClaimRequests from './pages/ClaimRequests'
+import TodoWorks from './pages/TodoWorks'
+import Profile from './pages/Profile'
 
-function App() {
-  const [count, setCount] = useState(0)
-
+function App(){
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <BrowserRouter>
+      <div style={{display:'flex'}}>
+        <Sidebar />
+        <main className="with-sidebar">
+          <Routes>
+            <Route path="/" element={<Dashboard/>} />
+            <Route path="/claim-requests" element={<ClaimRequests/>} />
+            <Route path="/todo-works" element={<TodoWorks/>} />
+            <Route path="/profile" element={<Profile/>} />
+          </Routes>
+        </main>
       </div>
-      <h1>Sidebar</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </BrowserRouter>
   )
 }
 

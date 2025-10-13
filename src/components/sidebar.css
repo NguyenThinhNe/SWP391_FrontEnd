@@ -1,0 +1,85 @@
+.sidebar {
+  width: 92px;
+  min-height: 100vh;
+  background: #fff;
+  border-right: 1px solid #eee;
+  padding: 20px 12px;
+  box-sizing: border-box;
+  position: fixed;
+  left: 0;
+  top: 0;
+}
+.brand {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom: 28px;
+  padding-left: 16px; /* align with nav icons */
+}
+.logo-img{
+  width:64px;
+  height:64px;
+  object-fit:contain;
+}
+.nav {
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.nav-item {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding: 8px 12px;
+  border-radius:999px;
+  color:#6b7280; /* gray-600 */
+  text-decoration:none;
+  width:100%;
+  box-sizing: border-box;
+}
+.nav-item:hover { background:#f6f7fb; }
+.nav-item.active {
+  background: #5a45ff;
+  color: #fff;
+  font-weight:600;
+}
+.nav-icon{ display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; }
+.nav-label{ display:none; /* hidden when sidebar collapsed */ }
+
+.icon{ width:18px; height:18px; }
+
+/* ensure active pill doesn't overflow the sidebar */
+.sidebar, .nav-item { box-sizing: border-box; }
+.sidebar-footer {
+  margin-top: auto;
+  position: absolute;
+  bottom: 20px;
+  left: 12px;
+}
+
+.logout-btn{ display:flex; align-items:center; gap:8px; background:transparent; border:0; color:#6b7280; padding:6px 0; cursor:pointer; padding-left: 16px }
+.logout-btn .logout-icon{ display:inline-flex; align-items:center; justify-content:center }
+.logout-btn .logout-label{ font-weight:600 }
+
+/* ensure active item's children (icon + label) have white color */
+.nav-item.active .nav-icon, .nav-item.active .nav-label { color: #fff }
+
+/* (logo kept large by default; wide layout still shows large logo) */
+
+/* layout helper for main content area */
+.with-sidebar {
+  margin-left: 112px; /* sidebar width + spacing */
+  padding: 24px;
+}
+
+/* when you want labels visible (wide layout) */
+@media (min-width:900px) {
+  .sidebar{ width:220px; }
+  .logo-img{ width:56px; height:56px; }
+  .nav-label{ display:inline-block; }
+  .with-sidebar{ margin-left: 240px; }
+}
+
+/* active pill should have internal padding and not exceed sidebar width */
+.nav-item.active{ padding-left:16px; padding-right:16px; }
+.nav-label{ font-weight:600; color:#374151; }
