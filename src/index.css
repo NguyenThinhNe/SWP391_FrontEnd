@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Archivo', -apple-system, Roboto, Helvetica, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -31,6 +31,17 @@ body {
   display: block;
   min-width: 320px;
   min-height: 100vh;
+}
+
+/* Ensure the html, body and root element occupy full height so layout can use 100%/100vh reliably */
+html, body, #root {
+  height: 100%;
+}
+
+/* Prevent horizontal scrollbars caused by 100vw on some devices */
+body {
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 h1 {
