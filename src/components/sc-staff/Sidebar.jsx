@@ -39,6 +39,7 @@ export default function Sidebar() {
         <nav className="px-7 flex flex-col gap-3 mt-20">
           <NavItem end={true} to="/sc-staff" icon={House} label="Dashboard" />
           <NavItem to="/sc-staff/assign-worker" icon={PencilLine} label="Assign Worker" />
+          <NavItem to="/sc-staff/part-requests" icon={PencilLine} label="Part requests" />
           <NavItem to="/sc-staff/warranty-report" icon={ClipboardText} label="Warranty Report" />
           <NavItem to="/sc-staff/bill-of-charge" icon={Receipt} label="Bill Of Charge" />
           <NavItem to="/sc-staff/profile" icon={User} label="Profile" />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { CheckCircle, DotsThree, CalendarBlank, CaretLeft, CaretRight } from 'phosphor-react'
 
 const StatsCard = ({ title, count, subtitle, icon: Icon }) => (
@@ -27,12 +28,18 @@ const claimsData = [
 ]
 
 export default function Dashboard() {
+  const navigate = useNavigate()
   const [currentPage, setCurrentPage] = useState(1)
   const totalPages = 4
   const [openDropdown, setOpenDropdown] = useState(null)
 
   const toggleDropdown = (index) => {
     setOpenDropdown(openDropdown === index ? null : index)
+  }
+
+  const handleViewDetails = (claimId) => {
+    navigate(`/sc-staff/warranty-request/${claimId}`)
+    setOpenDropdown(null)
   }
 
   return (
@@ -96,13 +103,9 @@ export default function Dashboard() {
                     
                     {openDropdown === index && (
                       <div className="absolute right-8 top-12 z-10">
-                        <button 
+                        <button
                           className="px-4 py-2 border border-[#E5E5E5] rounded-xl bg-white shadow-md text-[12px] font-medium text-black hover:bg-gray-50"
-                          onClick={() => {
-                            // Handle view details action
-                            console.log('View details for', claim.id)
-                            setOpenDropdown(null)
-                          }}
+                          onClick={() => handleViewDetails(claim.id)}
                         >
                           View Details
                         </button>
