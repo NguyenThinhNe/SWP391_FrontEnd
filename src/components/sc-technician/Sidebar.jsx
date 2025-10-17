@@ -29,10 +29,10 @@ export default function Sidebar() {
             <NavItem end={true} to="/sc-technician" icon={House} label="Dashboard" />
           </div>
           <div className="py-2">
-            <NavItem to="/sc-technician/tasks" icon={List} label="Task List" />
+            <NavItem to="/sc-technician/claims" icon={ClipboardText} label="Claim Requests" />
           </div>
           <div className="py-2">
-            <NavItem to="/sc-technician/claims" icon={ClipboardText} label="Claim Requests" />
+            <NavItem to="/sc-technician/tasks" icon={List} label="Todo Works" />
           </div>
           <div className="py-2">
             <NavItem to="/sc-technician/profile" icon={User} label="Profile" />
