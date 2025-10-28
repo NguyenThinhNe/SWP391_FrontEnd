@@ -24,26 +24,30 @@ import LoginRoutes from './LoginRoutes';
 export default function AppRouter() {
   return (
     <Routes>
-
       {/* Route with Login Layout */}
-      <Route path="/login" element={<LoginLayout />} />
-      {LoginRoutes}
+      <Route element={<LoginLayout />}>
+        {LoginRoutes}
+      </Route>
 
       {/* Route with SC-Technician Layout */}
-      <Route path="/sc-technician" element={<SCTechnicianLayout />} />
-      {scTechnicianRoutes}
+      <Route path="/sc-technician" element={<SCTechnicianLayout />}>
+        {scTechnicianRoutes}
+      </Route>
 
       {/* Route with SC-Staff Layout */}
-      <Route path="/sc-staff" element={<SCStaffLayout />} />
-      {scStaffRoutes}
+      <Route path="/sc-staff" element={<SCStaffLayout />}>
+        {scStaffRoutes}
+      </Route>
 
       {/* Route with EVM-Staff Layout */}
-      <Route path="/evm-staff" element={<EVMStaffLayout />} />
-      {evmStaffRoutes}
+      <Route path="/evm-staff" element={<EVMStaffLayout />}>
+        {evmStaffRoutes}
+      </Route>
 
       {/* Route with Admin Layout */}
-      <Route path="/admin" element={<AdminLayout />} />
-      {adminRoutes}
+      <Route path="/admin" element={<AdminLayout />}>
+        {adminRoutes}
+      </Route>
 
       {/* Fallback route */}
       <Route path="*" element={<Navigate to="/" replace />} />
