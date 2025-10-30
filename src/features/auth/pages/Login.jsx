@@ -29,7 +29,9 @@ export default function Login() {
       });
 
       // ✅ Redirect by role
-      if (userRole === "technician") {
+      if (userRole === "admin") {
+        navigate("/admin/dashboard");
+      } else if (userRole === "technician") {
         navigate("/sc-technician/dashboard");
       } else if (userRole === "scstaff") {
         navigate("/sc-staff/dashboard");

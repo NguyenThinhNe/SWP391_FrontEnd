@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import SCTechnicianLayout from "../layout/SCTechnicianLayout";
+import AdminLayout from "../layout/AdminLayout";
 import Loader from "../components/Loader";
 import NotFound from "../components/NotFound";
 import RoleRoute from "./RoleRoute";
@@ -25,6 +26,11 @@ const SCStaffReportPage = lazy(() => import("../features/dashboard/sc-staff/page
 const SCStaffPartRequestPage = lazy(() => import("../features/dashboard/sc-staff/pages/PartRequests"));
 const SCStaffBillPage = lazy(() => import("../features/dashboard/sc-staff/pages/BillOfCharge"));
 const SCStaffProfilePage = lazy(() => import("../features/dashboard/sc-staff/pages/Profile"));
+
+// Admin
+const AdminDashboardPage = lazy(() => import("../features/dashboard/admin/pages/Dashboard"));
+const AdminManageUsersPage = lazy(() => import("../features/dashboard/admin/pages/ManageUsers"));
+const AdminReportsPage = lazy(() => import("../features/dashboard/admin/pages/Reports"));
 
 const router = createBrowserRouter([
     {
@@ -75,6 +81,23 @@ const router = createBrowserRouter([
             { path: "report", element: <Suspense fallback={<Loader />}><SCStaffReportPage /></Suspense> },
             { path: "bill", element: <Suspense fallback={<Loader />}><SCStaffBillPage /></Suspense> },
             { path: "profile", element: <Suspense fallback={<Loader />}><SCStaffProfilePage /></Suspense> },
+        ],
+    },
+
+    {
+        path: "/admin",
+        element: (
+            <ProtectedRoute>
+                <RoleRoute allowedRoles={["admin"]}>
+                    <AdminLayout />
+                </RoleRoute>
+            </ProtectedRoute>
+        ),
+        children: [
+            { index: true, element: <Suspense fallback={<Loader />}><AdminDashboardPage /></Suspense> },
+            { path: "dashboard", element: <Suspense fallback={<Loader />}><AdminDashboardPage /></Suspense> },
+            { path: "manage-users", element: <Suspense fallback={<Loader />}><AdminManageUsersPage /></Suspense> },
+            { path: "reports", element: <Suspense fallback={<Loader />}><AdminReportsPage /></Suspense> },
         ],
     },
 

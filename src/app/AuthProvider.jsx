@@ -20,7 +20,12 @@ export function AuthProvider({ children }) {
     // Simulate login (pretend success)
     const login = async (email, password) => {
         // You can add fake validation here
-        if (email === "technician@example.com" && password === "123456") {
+        if (email === "admin@example.com" && password === "123456") {
+            const fakeUser = { email, role: "admin" };
+            setUser(fakeUser);
+            localStorage.setItem("user", JSON.stringify(fakeUser));
+            return { success: true, user: fakeUser };
+        } else if (email === "technician@example.com" && password === "123456") {
             const fakeUser = { email, role: "technician" };
             setUser(fakeUser);
             localStorage.setItem("user", JSON.stringify(fakeUser));
