@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import {
   CaretLeftIcon,
   CaretRightIcon,
-  PlusCircle,
-  DotsThree,
+  PlusCircleIcon,
+  DotsThreeIcon,
 } from "@phosphor-icons/react";
 import ConfirmDialog from "../../../components/system-components/ConfirmDialog.jsx";
 
@@ -128,7 +128,7 @@ export default function Campaign() {
             onClick={handleCreateCampaign}
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
           >
-            <PlusCircle size={20} />
+            <PlusCircleIcon size={20} />
             <span>Create Campaign</span>
           </button>
         </div>
@@ -191,7 +191,7 @@ export default function Campaign() {
                         }
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                       >
-                        <DotsThree size={24} className="text-gray-600" />
+                        <DotsThreeIcon size={24} className="text-gray-600" />
                       </button>
 
                       {activeMenu === campaign.id && (
