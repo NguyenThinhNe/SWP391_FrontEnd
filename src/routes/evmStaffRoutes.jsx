@@ -7,6 +7,7 @@ import ConfirmPayment from "../pages/evm-staff/payment/ConfirmPayment";
 import Campaign from "../pages/evm-staff/campaign/Campaign";
 import CreateCampaign from "../pages/evm-staff/campaign/CreateCampaign";
 import ViewCampaign from "../pages/evm-staff/campaign/ViewCampaign";
+import EditCampaign from "../pages/evm-staff/campaign/EditCampaign";
 import Policy from "../pages/evm-staff/policy/Policy";
 import PolicyDetails from "../pages/evm-staff/policy/PolicyDetails";
 import EditPolicy from "../pages/evm-staff/policy/EditPolicy";
@@ -24,6 +25,7 @@ export default (
     <Route path="campaign" element={<Campaign />} />
     <Route path="campaign/create" element={<CreateCampaign />} />
     <Route path="campaign/:id" element={<ViewCampaign />} />
+    <Route path="campaign/:id/edit" element={<EditCampaign />} />
     <Route path="claim/:id" element={<DashboardClaim />} />
     <Route path="claim/:id/reject" element={<RejectClaim />} />
     <Route path="claim/:id/part-supply" element={<PartSupply />} />

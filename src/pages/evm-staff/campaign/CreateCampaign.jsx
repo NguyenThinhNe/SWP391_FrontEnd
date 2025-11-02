@@ -1,20 +1,20 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
-import { CalendarIcon, ArrowLeftIcon } from '@phosphor-icons/react'
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { CalendarIcon, ArrowLeftIcon } from "@phosphor-icons/react";
 
 export default function CreateCampaign() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleBack = () => {
-    navigate('/evm-staff/campaign')
-  }
+    navigate("/evm-staff/campaign");
+  };
 
   return (
     <div className="w-full">
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="flex items-center gap-4 mb-2">
-            <button 
+            <button
               onClick={handleBack}
               className="p-2 hover:bg-gray-200 rounded-full transition-colors"
             >
@@ -22,13 +22,25 @@ export default function CreateCampaign() {
             </button>
             <h1 className="text-3xl font-bold">Create new Campaign</h1>
           </div>
-          <p className="text-gray-500">Fill out the form below to submit a new campaign for cars</p>
+          <p className="text-gray-500">
+            Fill out the form below to submit a new campaign for cars
+          </p>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl border-2 border-gray-200 p-8">
         <form className="space-y-8">
-          {/* Campaign Name */}
+          {/* Campaign ID and Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-2">
+              Campaign ID
+            </label>
+            <input
+              type="text"
+              className="w-full max-w-md px-4 py-3 rounded-lg bg-gray-50 border-2 border-gray-200 focus:outline-none focus:border-indigo-500"
+              placeholder="Enter campaign ID"
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-2">
               Campaign Name
@@ -66,7 +78,6 @@ export default function CreateCampaign() {
                 {/* <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} /> */}
               </div>
             </div>
-            
           </div>
 
           {/* Description */}
@@ -93,5 +104,5 @@ export default function CreateCampaign() {
         </form>
       </div>
     </div>
-  )
+  );
 }
