@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { DotsThree, CalendarBlank, CaretLeft, CaretRight, MagnifyingGlass, Plus, PencilSimple, Trash, X } from 'phosphor-react'
+import { useAdminApi } from '../../../../api/useAdminApi'
+import Loader from '../../../../components/Loader'
 
 const StatsCard = ({ title, count, subtitle, color }) => (
   <div className="border-[3px] border-[#EBEBEB] rounded-2xl p-8 flex-1">
@@ -154,24 +156,13 @@ const AddUserModal = ({ isOpen, onClose, onSubmit }) => {
   )
 }
 
-const usersData = [
-  { id: 'USR-001', name: 'John Doe', email: 'john.doe@example.com', role: 'Admin', status: 'Active', joinDate: '2024-01-15' },
-  { id: 'USR-002', name: 'Jane Smith', email: 'jane.smith@example.com', role: 'SC Staff', status: 'Active', joinDate: '2024-02-20' },
-  { id: 'USR-003', name: 'Peter Jones', email: 'peter.jones@example.com', role: 'EVM Staff', status: 'Active', joinDate: '2024-03-10' },
-  { id: 'USR-004', name: 'Mary Jane', email: 'mary.jane@example.com', role: 'Technician', status: 'Inactive', joinDate: '2024-04-05' },
-  { id: 'USR-005', name: 'David Copperfield', email: 'david.c@example.com', role: 'SC Staff', status: 'Active', joinDate: '2024-05-12' },
-  { id: 'USR-006', name: 'Sarah Connor', email: 'sarah.c@example.com', role: 'Technician', status: 'Active', joinDate: '2024-06-18' },
-  { id: 'USR-007', name: 'Bruce Wayne', email: 'bruce.w@example.com', role: 'Admin', status: 'Active', joinDate: '2024-07-22' },
-  { id: 'USR-008', name: 'Clark Kent', email: 'clark.k@example.com', role: 'EVM Staff', status: 'Inactive', joinDate: '2024-08-30' },
-]
-
 export default function ManageUsers() {
+  const { users, stats, loading, createUser, deleteUser } = useAdminApi()
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState('All')
   const [openDropdown, setOpenDropdown] = useState(null)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  const [users, setUsers] = useState(usersData)
   const [notification, setNotification] = useState(null)
   const totalPages = 3
 
@@ -179,41 +170,23 @@ export default function ManageUsers() {
     setOpenDropdown(openDropdown === index ? null : index)
   }
 
-  const handleAddUser = (newUserData) => {
-    // Generate new user ID
-    const newId = `USR-${String(users.length + 1).padStart(3, '0')}`
-    const newUser = {
-      id: newId,
-      name: newUserData.name,
-      email: newUserData.email,
-      role: newUserData.role,
-      status: newUserData.status,
-      joinDate: new Date().toISOString().split('T')[0]
-    }
-    
-    setUsers([newUser, ...users])
-    setIsAddModalOpen(false)
-    
-    // Show success notification
-    setNotification({
-      type: 'success',
-      message: 'User added successfully!'
-    })
-    
-    // Hide notification after 3 seconds
-    setTimeout(() => {
-      setNotification(null)
-    }, 3000)
-  }
-
-  const handleDeleteUser = (userId) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      setUsers(users.filter(user => user.id !== userId))
-      setOpenDropdown(null)
+  const handleAddUser = async (newUserData) => {
+    try {
+      await createUser(newUserData)
+      setIsAddModalOpen(false)
       
       setNotification({
         type: 'success',
-        message: 'User deleted successfully!'
+        message: 'User added successfully!'
+      })
+      
+      setTimeout(() => {
+        setNotification(null)
+      }, 3000)
+    } catch {
+      setNotification({
+        type: 'error',
+        message: 'Failed to add user. Please try again.'
       })
       
       setTimeout(() => {
@@ -222,7 +195,44 @@ export default function ManageUsers() {
     }
   }
 
-  const filteredUsers = users.filter(user => {
+  const handleDeleteUser = async (userId) => {
+    if (window.confirm('Are you sure you want to delete this user?')) {
+      try {
+        await deleteUser(userId)
+        setOpenDropdown(null)
+        
+        setNotification({
+          type: 'success',
+          message: 'User deleted successfully!'
+        })
+        
+        setTimeout(() => {
+          setNotification(null)
+        }, 3000)
+      } catch {
+        setNotification({
+          type: 'error',
+          message: 'Failed to delete user. Please try again.'
+        })
+        
+        setTimeout(() => {
+          setNotification(null)
+        }, 3000)
+      }
+    }
+  }
+
+  // Format users data for display
+  const formattedUsers = users.map(user => ({
+    id: user.id || user.userId,
+    name: user.name || user.fullName || user.userName,
+    email: user.email,
+    role: user.role || user.roleName,
+    status: user.status || (user.isActive ? 'Active' : 'Inactive'),
+    joinDate: user.joinDate || user.createdAt ? new Date(user.joinDate || user.createdAt).toISOString().split('T')[0] : 'N/A'
+  }))
+
+  const filteredUsers = formattedUsers.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.id.toLowerCase().includes(searchTerm.toLowerCase())
@@ -230,8 +240,7 @@ export default function ManageUsers() {
     return matchesSearch && matchesRole
   })
 
-  const activeUsers = users.filter(u => u.status === 'Active').length
-  const inactiveUsers = users.filter(u => u.status === 'Inactive').length
+  if (loading) return <Loader />
 
   return (
     <div className="p-12 w-full">
@@ -274,19 +283,19 @@ export default function ManageUsers() {
       <div className="flex gap-8 mb-12">
         <StatsCard 
           title="Total Users" 
-          count={users.length.toString()} 
+          count={stats.totalUsers.toString()} 
           subtitle="Registered in system" 
           color="text-black"
         />
         <StatsCard 
           title="Active Users" 
-          count={activeUsers.toString()} 
+          count={stats.activeUsers.toString()} 
           subtitle="Currently active" 
           color="text-[#54C020]"
         />
         <StatsCard 
           title="Inactive Users" 
-          count={inactiveUsers.toString()} 
+          count={stats.inactiveUsers.toString()} 
           subtitle="Temporarily disabled" 
           color="text-[#FF3232]"
         />
@@ -394,7 +403,7 @@ export default function ManageUsers() {
           
           <div className="flex items-center justify-between px-8 py-6 bg-white">
             <span className="text-[12px] font-normal text-black">
-              Showing {filteredUsers.length} of {users.length} users
+              Showing {filteredUsers.length} of {stats.totalUsers} users
             </span>
             
             <div className="flex items-center gap-4">

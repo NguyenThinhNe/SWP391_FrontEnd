@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Users, Buildings, Wrench, DotsThree, CalendarBlank, CaretLeft, CaretRight } from 'phosphor-react'
+import { useAdminApi } from '../../../../api/useAdminApi'
+import Loader from '../../../../components/Loader'
 
 const StatsCard = ({ title, count, subtitle, icon: Icon }) => (
   <div className="border-[3px] border-[#EBEBEB] rounded-2xl p-8 flex-1">
@@ -13,21 +15,24 @@ const StatsCard = ({ title, count, subtitle, icon: Icon }) => (
   </div>
 )
 
-const usersData = [
-  { id: 'USR-001', name: 'John Doe', email: 'john.doe@example.com', role: 'Admin', date: '2024-07-21' },
-  { id: 'USR-002', name: 'Jane Smith', email: 'jane.smith@example.com', role: 'SC Staff', date: '2024-07-20' },
-  { id: 'USR-003', name: 'Peter Jones', email: 'peter.jones@example.com', role: 'EVM Staff', date: '2024-07-20' },
-  { id: 'USR-004', name: 'Mary Jane', email: 'mary.jane@example.com', role: 'Technician', date: '2024-07-19' },
-  { id: 'USR-005', name: 'David Copperfield', email: 'david.c@example.com', role: 'Customer', date: '2024-07-18' },
-  { id: 'USR-006', name: 'Sarah Connor', email: 'sarah.c@example.com', role: 'SC Staff', date: '2024-07-18' },
-  { id: 'USR-007', name: 'Bruce Wayne', email: 'bruce.w@example.com', role: 'Admin', date: '2024-07-17' },
-]
-
 export default function Dashboard() {
   const navigate = useNavigate()
+  const { users, stats, loading, error } = useAdminApi()
   const [currentPage, setCurrentPage] = useState(1)
   const totalPages = 3
   const [openDropdown, setOpenDropdown] = useState(null)
+
+  // Get recent users (last 7)
+  const recentUsers = users.slice(0, 7).map(user => ({
+    id: user.id || user.userId,
+    name: user.name || user.fullName || user.userName,
+    email: user.email,
+    role: user.role || user.roleName,
+    date: user.joinDate || user.createdAt ? new Date(user.joinDate || user.createdAt).toISOString().split('T')[0] : 'N/A'
+  }))
+
+  if (loading) return <Loader />
+  if (error) console.error("Dashboard error:", error)
 
   const toggleDropdown = (index) => {
     setOpenDropdown(openDropdown === index ? null : index)
@@ -57,19 +62,19 @@ export default function Dashboard() {
       <div className="flex gap-8 mb-12">
         <StatsCard 
           title="Total Users" 
-          count="1,250" 
+          count={stats.totalUsers.toString()} 
           subtitle="Across all roles" 
           icon={Users}
         />
         <StatsCard 
           title="Service Centers" 
-          count="45" 
+          count={stats.totalServiceCenters.toString()} 
           subtitle="Nationwide locations" 
           icon={Buildings}
         />
         <StatsCard 
           title="Total Policies" 
-          count="15" 
+          count={stats.totalPolicies.toString()} 
           subtitle="Active warranty policies" 
           icon={Wrench}
         />
@@ -91,7 +96,7 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {usersData.map((user, index) => (
+              {recentUsers.map((user, index) => (
                 <tr key={index} className="border-b-2 border-[#DEE1E6] bg-white hover:bg-gray-50">
                   <td className="px-8 py-3 text-[13px] font-medium text-black">{user.id}</td>
                   <td className="px-8 py-3 text-[13px] font-medium text-black">{user.name}</td>
@@ -123,7 +128,7 @@ export default function Dashboard() {
           </table>
           
           <div className="flex items-center justify-between px-8 py-6 bg-white">
-            <span className="text-[12px] font-normal text-black">Showing 1 to 7 of 1,250 results</span>
+            <span className="text-[12px] font-normal text-black">Showing 1 to {recentUsers.length} of {stats.totalUsers} results</span>
             
             <div className="flex items-center gap-4">
               <button 
