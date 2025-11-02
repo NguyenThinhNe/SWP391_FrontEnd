@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CaretLeftIcon,
@@ -7,25 +7,9 @@ import {
   DotsThreeIcon,
 } from "@phosphor-icons/react";
 import ConfirmDialog from "../../../components/system-components/ConfirmDialog.jsx";
+import campaignAPI from "../../../api/campaignAPI";
 
-const sampleCampaigns = Array.from({ length: 10 }).map((_, i) => ({
-  id: `CP-00${i + 1}`,
-  name: `Campaign ${i + 1}`,
-  startDate: "2024-07-21",
-  endDate: "2024-08-21",
-  status: [
-    "Active",
-    "Completed",
-    "Active",
-    "Pending",
-    "Active",
-    "Completed",
-    "Pending",
-    "Active",
-    "Completed",
-    "Pending",
-  ][i],
-}));
+// campaigns will be fetched from API
 
 const stats = [
   { id: 1, title: "Total Campaigns", value: "24", subtitle: "All time" },
@@ -72,9 +56,32 @@ export default function Campaign() {
     campaignId: null,
   });
 
+  const [campaigns, setCampaigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const handleCreateCampaign = () => {
     navigate("/evm-staff/campaign/create");
   };
+
+  const fetchCampaigns = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await campaignAPI.getAllCampaigns();
+      // Expecting API to return an array of campaign objects matching the provided shape
+      setCampaigns(data || []);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load campaigns");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, []);
 
   const handleView = (campaignId) => {
     setActiveMenu(null);
@@ -86,10 +93,19 @@ export default function Campaign() {
     setDeleteDialog({ isOpen: true, campaignId });
   };
 
-  const confirmDelete = () => {
-    // TODO: Implement delete API call here
-    console.log("Deleting campaign:", deleteDialog.campaignId);
-    setDeleteDialog({ isOpen: false, campaignId: null });
+  const confirmDelete = async () => {
+    try {
+      // call API to delete
+      await campaignAPI.deleteCampaign(deleteDialog.campaignId);
+      // remove from local list
+      setCampaigns((prev) =>
+        prev.filter((c) => c.campaignId !== deleteDialog.campaignId)
+      );
+      setDeleteDialog({ isOpen: false, campaignId: null });
+    } catch (err) {
+      console.error("Delete failed", err);
+      setDeleteDialog({ isOpen: false, campaignId: null });
+    }
   };
 
   return (
@@ -157,63 +173,116 @@ export default function Campaign() {
               </tr>
             </thead>
             <tbody className="divide-y-2 divide-gray-200">
-              {sampleCampaigns.map((campaign) => (
-                <tr key={campaign.id} className="hover:bg-gray-50">
-                  <td className="py-4 px-6 text-sm text-gray-600">
-                    {campaign.id}
-                  </td>
-                  <td className="py-4 px-6 text-sm font-medium">
-                    {campaign.name}
-                  </td>
-                  <td className="py-4 px-6 text-sm text-gray-600">
-                    {campaign.startDate}
-                  </td>
-                  <td className="py-4 px-6 text-sm text-gray-600">
-                    {campaign.endDate}
-                  </td>
-                  <td className="py-4 px-6">
-                    <span
-                      className={
-                        "px-3 py-1 text-sm font-medium rounded-full " +
-                        statusColorMap[campaign.status]
-                      }
-                    >
-                      {campaign.status}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="relative">
-                      <button
-                        onClick={() =>
-                          setActiveMenu(
-                            activeMenu === campaign.id ? null : campaign.id
-                          )
-                        }
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                      >
-                        <DotsThreeIcon size={24} className="text-gray-600" />
-                      </button>
-
-                      {activeMenu === campaign.id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                          <button
-                            onClick={() => handleView(campaign.id)}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
-                          >
-                            View Details
-                          </button>
-                          <button
-                            onClick={() => handleDelete(campaign.id)}
-                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-b-lg"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
-                    </div>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-gray-500">
+                    Loading campaigns...
                   </td>
                 </tr>
-              ))}
+              ) : error ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-red-500">
+                    {error}
+                  </td>
+                </tr>
+              ) : campaigns.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-gray-500">
+                    No campaigns found.
+                  </td>
+                </tr>
+              ) : (
+                campaigns.map((campaign) => {
+                  const statusLabel = (() => {
+                    if (campaign.status === 0) return "Active";
+                    if (campaign.status === 1) return "Completed";
+                    if (campaign.status === 2) return "Pending";
+                    return "Unknown";
+                  })();
+
+                  const formatDate = (iso) => {
+                    try {
+                      return new Date(iso).toLocaleDateString();
+                    } catch {
+                      return iso || "-";
+                    }
+                  };
+
+                  return (
+                    <tr
+                      key={campaign.campaignId || campaign.id}
+                      className="hover:bg-gray-50"
+                    >
+                      <td className="py-4 px-6 text-sm text-gray-600">
+                        {campaign.campaignId || campaign.id}
+                      </td>
+                      <td className="py-4 px-6 text-sm font-medium">
+                        {campaign.campaignName || campaign.name}
+                      </td>
+                      <td className="py-4 px-6 text-sm text-gray-600">
+                        {formatDate(campaign.startDate)}
+                      </td>
+                      <td className="py-4 px-6 text-sm text-gray-600">
+                        {formatDate(campaign.endDate)}
+                      </td>
+                      <td className="py-4 px-6">
+                        <span
+                          className={
+                            "px-3 py-1 text-sm font-medium rounded-full " +
+                            statusColorMap[statusLabel]
+                          }
+                        >
+                          {statusLabel}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="relative" data-dropdown>
+                          <button
+                            onClick={() =>
+                              setActiveMenu(
+                                activeMenu ===
+                                  (campaign.campaignId || campaign.id)
+                                  ? null
+                                  : campaign.campaignId || campaign.id
+                              )
+                            }
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <DotsThreeIcon
+                              size={24}
+                              className="text-gray-600"
+                            />
+                          </button>
+
+                          {activeMenu ===
+                            (campaign.campaignId || campaign.id) && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                              <button
+                                onClick={() =>
+                                  handleView(campaign.campaignId || campaign.id)
+                                }
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
+                              >
+                                View Details
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleDelete(
+                                    campaign.campaignId || campaign.id
+                                  )
+                                }
+                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-b-lg"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
