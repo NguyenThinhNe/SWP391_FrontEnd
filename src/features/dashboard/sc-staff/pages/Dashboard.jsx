@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircle, DotsThree, CalendarBlank, CaretLeft, CaretRight } from 'phosphor-react'
+import { useSCStaffApi } from '../../../../api/useSCStaffApi'
+import Loader from '../../../../components/Loader'
 
 const StatsCard = ({ title, count, subtitle, icon: Icon }) => (
   <div className="border-[3px] border-[#EBEBEB] rounded-2xl p-8 min-w-[492px]">
@@ -13,33 +15,38 @@ const StatsCard = ({ title, count, subtitle, icon: Icon }) => (
   </div>
 )
 
-const claimsData = [
-  { id: 'RO-001', vehicle: 'VinFast VF-3', vin: 'LSV1E7AL0MC123456', requester: 'Jso', date: '2024-07-21' },
-  { id: 'RO-002', vehicle: 'Neiro Green', vin: 'LSV1E7AL0MC123456', requester: 'Jso', date: '2024-07-21' },
-  { id: 'RO-003', vehicle: 'VinFast VF-3', vin: 'LSV1E7AL0MC123456', requester: 'Jso', date: '2024-07-21' },
-  { id: 'RO-003', vehicle: 'VinFast VF-3', vin: 'LSV1E7AL0MC123456', requester: 'Jso', date: '2024-07-21' },
-  { id: 'RO-004', vehicle: 'VinFast VF-3', vin: 'LSV1E7AL0MC123456', requester: 'Jso', date: '2024-07-21' },
-  { id: 'RO-005', vehicle: 'VinFast VF-3', vin: 'LSV1E7AL0MC123456', requester: 'Jso', date: '2024-07-21' },
-  { id: 'RO-006', vehicle: 'VinFast VF-3', vin: 'LSV1E7AL0MC123456', requester: 'Jso', date: '2024-07-21' },
-  { id: 'RO-007', vehicle: 'VinFast VF-3', vin: 'LSV1E7AL0MC123456', requester: 'Jso', date: '2024-07-21' },
-  { id: 'RO-008', vehicle: 'VinFast VF-3', vin: 'LSV1E7AL0MC123456', requester: 'Jso', date: '2024-07-21' },
-  { id: 'RO-009', vehicle: 'VinFast VF-3', vin: 'LSV1E7AL0MC123456', requester: 'Jso', date: '2024-07-21' },
-  { id: 'RO-010', vehicle: 'VinFast VF-3', vin: 'LSV1E7AL0MC123456', requester: 'Jso', date: '2024-07-21' },
-]
-
 export default function Dashboard() {
   const navigate = useNavigate()
+  const { claims, stats, loading, error, fetchClaims } = useSCStaffApi()
   const [currentPage, setCurrentPage] = useState(1)
   const totalPages = 4
   const [openDropdown, setOpenDropdown] = useState(null)
+
+  useEffect(() => {
+    fetchClaims()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Format claims data for display
+  const formattedClaims = claims.map(claim => ({
+    id: claim.id || claim.claimId || 'N/A',
+    vehicle: claim.vehicle || claim.vehicleName || 'Unknown Vehicle',
+    vin: claim.vin || 'N/A',
+    requester: claim.requester || claim.requesterName || claim.technicianName || 'N/A',
+    date: claim.date || claim.claimDate ? new Date(claim.date || claim.claimDate).toISOString().split('T')[0] : 'N/A'
+  }))
+
+  if (loading && claims.length === 0) return <Loader />
+  if (error) console.error("Dashboard error:", error)
 
   const toggleDropdown = (index) => {
     setOpenDropdown(openDropdown === index ? null : index)
   }
 
   const handleViewDetails = (claimId) => {
-    navigate(`/sc-staff/warranty-request/${claimId}`)
-    setOpenDropdown(null)
+    // Navigate to existing WarrantyRequestDetail page
+    navigate(`/sc-staff/warranty-request/${claimId}`);
+    setOpenDropdown(null);
   }
 
   return (
@@ -87,7 +94,14 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {claimsData.map((claim, index) => (
+              {formattedClaims.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-8 py-8 text-center text-gray-500">
+                    No claims found
+                  </td>
+                </tr>
+              ) : (
+                formattedClaims.map((claim, index) => (
                 <tr key={index} className="border-b-2 border-[#DEE1E6] bg-white hover:bg-gray-50">
                   <td className="px-8 py-3 text-[13px] font-medium text-black">{claim.id}</td>
                   <td className="px-8 py-3 text-[13px] font-medium text-black">{claim.vehicle}</td>
@@ -104,7 +118,7 @@ export default function Dashboard() {
                     {openDropdown === index && (
                       <div className="absolute right-8 top-12 z-10">
                         <button
-                          className="px-4 py-2 border border-[#E5E5E5] rounded-xl bg-white shadow-md text-[12px] font-medium text-black hover:bg-gray-50"
+                          className="px-6 py-3 border border-[#E5E5E5] rounded-xl bg-white shadow-md text-sm font-medium text-black hover:bg-gray-50 whitespace-nowrap"
                           onClick={() => handleViewDetails(claim.id)}
                         >
                           View Details
@@ -113,12 +127,12 @@ export default function Dashboard() {
                     )}
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
           
           <div className="flex items-center justify-between px-8 py-6 bg-white">
-            <span className="text-[12px] font-normal text-black">Showing 1 to 10 of 247 results</span>
+            <span className="text-[12px] font-normal text-black">Showing {formattedClaims.length} of {stats.totalClaims} results</span>
             
             <div className="flex items-center gap-4">
               <button 

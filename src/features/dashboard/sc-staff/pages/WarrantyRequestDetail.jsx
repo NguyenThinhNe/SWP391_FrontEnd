@@ -1,6 +1,8 @@
-import React, { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { CalendarBlank, Info, Car, Gear, Warning, Camera, Headphones } from 'phosphor-react'
+import { useSCStaffApi } from '../../../../api/useSCStaffApi'
+import Loader from '../../../../components/Loader'
 
 const InfoCard = ({ icon: Icon, title, children }) => (
   <div className="border-[3px] border-[#EBEBEB] rounded-2xl p-6">
@@ -40,29 +42,52 @@ const RadioOption = ({ label, checked, onChange }) => (
 
 export default function WarrantyRequestDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
+  const { fetchClaimById, approveClaim, rejectClaim, loading, error } = useSCStaffApi()
+  const [claimData, setClaimData] = useState(null)
   const [selectedRequest, setSelectedRequest] = useState('replacement')
   const [showPartModal, setShowPartModal] = useState(false)
 
-  const claimData = {
-    claimId: 'WC-2003-9192332',
-    claimDate: '02/12/2025',
-    createdBy: 'Jso',
-    manufacturer: 'VinFast',
-    serviceCenter: 'WC-2003-9192332',
-    vinCode: 'LSV1E7AL0MC123458',
-    vehicleName: 'VinFast VF-3',
-    currentMileage: '8,433',
-    purchaseDate: '12/23/2012',
-    partName: 'Battery',
-    partCode: 'PIN12334SD',
-    replacementDate: '05/16/2025',
-    issueDescription: 'My car cannot start like normal, when start the engine the sound is noisy as hell.',
-    images: [
-      'https://api.builder.io/api/v1/image/assets/TEMP/2cbfa0524981f52778587d8578a529c7eddfd946?width=350',
-      'https://api.builder.io/api/v1/image/assets/TEMP/0ea44651492d751b9f8920515492f3e9195b19e4?width=644',
-      'https://api.builder.io/api/v1/image/assets/TEMP/7659294167319636ceebbe6578953b5598dedc13?width=452'
-    ]
+  useEffect(() => {
+    const loadClaimData = async () => {
+      try {
+        const data = await fetchClaimById(id)
+        setClaimData(data)
+      } catch (err) {
+        console.error('Failed to load claim:', err)
+      }
+    }
+    
+    if (id) {
+      loadClaimData()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
+  const handleAcceptRequest = async () => {
+    try {
+      await approveClaim(id)
+      alert('Claim approved successfully!')
+      navigate('/sc-staff/dashboard')
+    } catch {
+      alert('Failed to approve claim')
+    }
   }
+
+  const handleRejectRequest = async () => {
+    if (window.confirm('Are you sure you want to reject this claim?')) {
+      try {
+        await rejectClaim(id)
+        alert('Claim rejected successfully!')
+        navigate('/sc-staff/dashboard')
+      } catch {
+        alert('Failed to reject claim')
+      }
+    }
+  }
+
+  if (loading || !claimData) return <Loader />
+  if (error) return <div className="p-12">Error loading claim details</div>
 
   return (
     <div className="p-12 w-full">
@@ -96,22 +121,22 @@ export default function WarrantyRequestDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <InfoCard icon={Info} title="Basic Information">
           <div className="grid grid-cols-2 gap-6">
-            <InfoField label="Claim ID" value={claimData.claimId} />
-            <InfoField label="Claim Date" value={claimData.claimDate} />
-            <InfoField label="Created By" value={claimData.createdBy} />
-            <InfoField label="Manufacturer" value={claimData.manufacturer} />
+            <InfoField label="Claim ID" value={claimData.claimId || claimData.id || id} />
+            <InfoField label="Claim Date" value={claimData.claimDate || claimData.createdAt || 'N/A'} />
+            <InfoField label="Created By" value={claimData.createdBy || claimData.customerName || 'N/A'} />
+            <InfoField label="Manufacturer" value={claimData.manufacturer || 'N/A'} />
             <div className="col-span-2">
-              <InfoField label="Service Center" value={claimData.serviceCenter} />
+              <InfoField label="Service Center" value={claimData.serviceCenter || claimData.serviceCenterName || 'N/A'} />
             </div>
           </div>
         </InfoCard>
 
         <InfoCard icon={Car} title="Vehicle Information">
           <div className="grid grid-cols-2 gap-6">
-            <InfoField label="VIN Code" value={claimData.vinCode} />
-            <InfoField label="Vehicle Name" value={claimData.vehicleName} />
-            <InfoField label="Current Mileage (km)" value={claimData.currentMileage} />
-            <InfoField label="Purchase Date of Vehicle" value={claimData.purchaseDate} />
+            <InfoField label="VIN Code" value={claimData.vinCode || claimData.vehicleId || 'N/A'} />
+            <InfoField label="Vehicle Name" value={claimData.vehicleName || 'N/A'} />
+            <InfoField label="Current Mileage (km)" value={claimData.currentMileage || claimData.mileage || 'N/A'} />
+            <InfoField label="Purchase Date of Vehicle" value={claimData.purchaseDate || 'N/A'} />
           </div>
         </InfoCard>
       </div>
@@ -119,10 +144,10 @@ export default function WarrantyRequestDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <InfoCard icon={Gear} title="Part Information">
           <div className="grid grid-cols-2 gap-6">
-            <InfoField label="Part Name" value={claimData.partName} />
-            <InfoField label="Part Code" value={claimData.partCode} />
+            <InfoField label="Part Name" value={claimData.partName || 'N/A'} />
+            <InfoField label="Part Code" value={claimData.partCode || 'N/A'} />
             <div className="col-span-2">
-              <InfoField label="Replacement Date" value={claimData.replacementDate} />
+              <InfoField label="Replacement Date" value={claimData.replacementDate || 'N/A'} />
             </div>
           </div>
         </InfoCard>
@@ -152,7 +177,9 @@ export default function WarrantyRequestDetail() {
         <InfoCard icon={Warning} title="Issue Details">
           <div className="border-[3px] border-[#F4F4F4] rounded-2xl p-6 bg-white">
             <div className="text-base font-medium text-[#6B716F] mb-3">Issue Description</div>
-            <p className="text-xl font-medium text-black leading-relaxed">{claimData.issueDescription}</p>
+            <p className="text-xl font-medium text-black leading-relaxed">
+              {claimData.issueDescription || claimData.description || claimData.issue || 'No description provided'}
+            </p>
           </div>
         </InfoCard>
 
@@ -161,10 +188,18 @@ export default function WarrantyRequestDetail() {
             <div className="text-lg font-semibold text-[#686262]">Actions</div>
           </div>
           <div className="space-y-3">
-            <button className="w-full py-3 bg-[#626AE7] rounded-2xl text-sm font-semibold text-white hover:bg-[#5159c9] transition-colors">
+            <button 
+              onClick={handleAcceptRequest}
+              disabled={loading}
+              className="w-full py-3 bg-[#626AE7] rounded-2xl text-sm font-semibold text-white hover:bg-[#5159c9] transition-colors disabled:opacity-50"
+            >
               Accept Request
             </button>
-            <button className="w-full py-3 bg-[#F1F3F4] rounded-2xl text-sm font-semibold text-black hover:bg-[#e5e7e9] transition-colors">
+            <button 
+              onClick={handleRejectRequest}
+              disabled={loading}
+              className="w-full py-3 bg-[#F1F3F4] rounded-2xl text-sm font-semibold text-black hover:bg-[#e5e7e9] transition-colors disabled:opacity-50"
+            >
               Reject Request
             </button>
             <button 
@@ -181,15 +216,21 @@ export default function WarrantyRequestDetail() {
         <InfoCard icon={Camera} title="Evidence Upload">
           <div className="border-[3px] border-dashed border-[#EBEBEB] rounded-2xl p-6 bg-white">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {claimData.images.map((image, index) => (
-                <div key={index} className="aspect-[3/2] rounded-xl overflow-hidden">
-                  <img 
-                    src={image} 
-                    alt={`Evidence ${index + 1}`} 
-                    className="w-full h-full object-cover"
-                  />
+              {(claimData.images || claimData.evidenceImages || []).length > 0 ? (
+                (claimData.images || claimData.evidenceImages).map((image, index) => (
+                  <div key={index} className="aspect-[3/2] rounded-xl overflow-hidden">
+                    <img 
+                      src={image} 
+                      alt={`Evidence ${index + 1}`} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-3 text-center py-8 text-gray-500">
+                  No evidence images uploaded
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </InfoCard>
@@ -223,17 +264,17 @@ export default function WarrantyRequestDetail() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Part Name</div>
-                    <div className="text-base font-semibold text-black">{claimData.partName}</div>
+                    <div className="text-base font-semibold text-black">{claimData.partName || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Part Code</div>
-                    <div className="text-base font-semibold text-black">{claimData.partCode}</div>
+                    <div className="text-base font-semibold text-black">{claimData.partCode || 'N/A'}</div>
                   </div>
                 </div>
                 
                 <div>
                   <div className="text-xs text-gray-500 mb-1">Replacement Date</div>
-                  <div className="text-base font-semibold text-black">{claimData.replacementDate}</div>
+                  <div className="text-base font-semibold text-black">{claimData.replacementDate || 'N/A'}</div>
                 </div>
               </div>
             </div>

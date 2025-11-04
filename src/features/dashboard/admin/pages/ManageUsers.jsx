@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { DotsThree, CalendarBlank, CaretLeft, CaretRight, MagnifyingGlass, Plus, PencilSimple, Trash, X } from 'phosphor-react'
+import { DotsThree, CalendarBlank, CaretLeft, CaretRight, MagnifyingGlass, Plus, PencilSimple, Power, X } from 'phosphor-react'
 import { useAdminApi } from '../../../../api/useAdminApi'
 import Loader from '../../../../components/Loader'
 
@@ -157,7 +157,7 @@ const AddUserModal = ({ isOpen, onClose, onSubmit }) => {
 }
 
 export default function ManageUsers() {
-  const { users, stats, loading, createUser, deleteUser } = useAdminApi()
+  const { users, stats, loading, toggleUserActive } = useAdminApi()
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState('All')
@@ -172,12 +172,14 @@ export default function ManageUsers() {
 
   const handleAddUser = async (newUserData) => {
     try {
-      await createUser(newUserData)
+      // Note: Backend doesn't have POST /users endpoint yet
+      // This will be added when backend implements user creation
+      console.log("Add user (not implemented yet):", newUserData)
       setIsAddModalOpen(false)
       
       setNotification({
-        type: 'success',
-        message: 'User added successfully!'
+        type: 'error',
+        message: 'User creation not available yet (Backend endpoint pending)'
       })
       
       setTimeout(() => {
@@ -195,15 +197,16 @@ export default function ManageUsers() {
     }
   }
 
-  const handleDeleteUser = async (userId) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
+  const handleToggleActive = async (userId, currentStatus) => {
+    const action = currentStatus === 'Active' ? 'deactivate' : 'activate'
+    if (window.confirm(`Are you sure you want to ${action} this user?`)) {
       try {
-        await deleteUser(userId)
+        await toggleUserActive(userId)
         setOpenDropdown(null)
         
         setNotification({
           type: 'success',
-          message: 'User deleted successfully!'
+          message: `User ${action}d successfully!`
         })
         
         setTimeout(() => {
@@ -212,7 +215,7 @@ export default function ManageUsers() {
       } catch {
         setNotification({
           type: 'error',
-          message: 'Failed to delete user. Please try again.'
+          message: `Failed to ${action} user. Please try again.`
         })
         
         setTimeout(() => {
@@ -387,11 +390,13 @@ export default function ManageUsers() {
                           Edit User
                         </button>
                         <button 
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="w-full px-4 py-2 text-left text-[12px] font-medium text-[#FF3232] hover:bg-gray-50 flex items-center gap-2"
+                          onClick={() => handleToggleActive(user.id, user.status)}
+                          className={`w-full px-4 py-2 text-left text-[12px] font-medium hover:bg-gray-50 flex items-center gap-2 ${
+                            user.status === 'Active' ? 'text-[#FF3232]' : 'text-[#54C020]'
+                          }`}
                         >
-                          <Trash size={16} />
-                          Delete User
+                          <Power size={16} />
+                          {user.status === 'Active' ? 'Deactivate User' : 'Activate User'}
                         </button>
                       </div>
                     )}

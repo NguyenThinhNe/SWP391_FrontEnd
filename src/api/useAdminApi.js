@@ -13,7 +13,7 @@ export const useAdminApi = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Fetch all users
+    // Fetch all users - using /api/users endpoint
     const fetchUsers = async () => {
         try {
             setLoading(true);
@@ -45,79 +45,78 @@ export const useAdminApi = () => {
         } catch (err) {
             console.error("Fetch users failed:", err);
             setError(err);
-            // Fallback mock data
-            setUsers([
-                { id: 'USR-001', name: 'John Doe', email: 'john.doe@example.com', role: 'Admin', status: 'Active', joinDate: '2024-01-15' },
-                { id: 'USR-002', name: 'Jane Smith', email: 'jane.smith@example.com', role: 'SC Staff', status: 'Active', joinDate: '2024-02-20' },
-            ]);
+            setUsers([]);
         } finally {
             setLoading(false);
         }
     };
 
-    // Fetch dashboard stats
-    const fetchStats = async () => {
+    // Fetch active users - using /api/users/active endpoint
+    const fetchActiveUsers = async () => {
         try {
-            const response = await axiosInstance.get("/admin/stats");
-            const data = response.data?.data || response.data;
+            const response = await axiosInstance.get("/users/active");
+            const data = Array.isArray(response.data)
+                ? response.data
+                : response.data?.data || [];
             
-            setStats({
-                totalUsers: data.totalUsers || 0,
-                activeUsers: data.activeUsers || 0,
-                inactiveUsers: data.inactiveUsers || 0,
-                totalServiceCenters: data.totalServiceCenters || data.serviceCenters || 0,
-                totalPolicies: data.totalPolicies || data.policies || 0
-            });
+            setStats(prev => ({
+                ...prev,
+                activeUsers: data.length
+            }));
         } catch (err) {
-            console.error("Fetch stats failed:", err);
-            // Stats will be calculated from users data in fetchUsers
+            console.error("Fetch active users failed:", err);
         }
     };
 
-    // Create new user
-    const createUser = async (userData) => {
+    // Fetch users by role - using /api/users/by-role/{role}
+    const fetchUsersByRole = async (role) => {
         try {
-            setLoading(true);
-            setError(null);
-            await axiosInstance.post("/users", userData);
-            await fetchUsers();
-            return { success: true, message: "User created successfully" };
+            const response = await axiosInstance.get(`/users/by-role/${role}`);
+            return Array.isArray(response.data)
+                ? response.data
+                : response.data?.data || [];
         } catch (err) {
-            console.error("Create user failed:", err);
-            setError(err);
-            throw err;
-        } finally {
-            setLoading(false);
+            console.error(`Fetch users by role ${role} failed:`, err);
+            return [];
         }
     };
 
-    // Update user
-    const updateUser = async (userId, userData) => {
+    // Fetch technicians - using /api/users/technicians
+    const fetchTechnicians = async () => {
         try {
-            setLoading(true);
-            setError(null);
-            await axiosInstance.put(`/users/${userId}`, userData);
-            await fetchUsers();
-            return { success: true, message: "User updated successfully" };
+            const response = await axiosInstance.get("/users/technicians");
+            return Array.isArray(response.data)
+                ? response.data
+                : response.data?.data || [];
         } catch (err) {
-            console.error("Update user failed:", err);
-            setError(err);
-            throw err;
-        } finally {
-            setLoading(false);
+            console.error("Fetch technicians failed:", err);
+            return [];
         }
     };
 
-    // Delete user
-    const deleteUser = async (userId) => {
+    // Fetch users by center - using /api/users/by-center/{centerId}
+    const fetchUsersByCenter = async (centerId) => {
+        try {
+            const response = await axiosInstance.get(`/users/by-center/${centerId}`);
+            return Array.isArray(response.data)
+                ? response.data
+                : response.data?.data || [];
+        } catch (err) {
+            console.error(`Fetch users by center ${centerId} failed:`, err);
+            return [];
+        }
+    };
+
+    // Toggle user active status - using PUT /api/users/{userId}/active
+    const toggleUserActive = async (userId) => {
         try {
             setLoading(true);
             setError(null);
-            await axiosInstance.delete(`/users/${userId}`);
+            await axiosInstance.put(`/users/${userId}/active`);
             await fetchUsers();
-            return { success: true, message: "User deleted successfully" };
+            return { success: true, message: "User status updated successfully" };
         } catch (err) {
-            console.error("Delete user failed:", err);
+            console.error("Toggle user active failed:", err);
             setError(err);
             throw err;
         } finally {
@@ -143,7 +142,7 @@ export const useAdminApi = () => {
 
     useEffect(() => {
         fetchUsers();
-        fetchStats();
+        fetchActiveUsers();
     }, []);
 
     return {
@@ -152,10 +151,11 @@ export const useAdminApi = () => {
         loading,
         error,
         fetchUsers,
-        fetchStats,
-        createUser,
-        updateUser,
-        deleteUser,
+        fetchActiveUsers,
+        fetchUsersByRole,
+        fetchTechnicians,
+        fetchUsersByCenter,
+        toggleUserActive,
         getUserById
     };
 };

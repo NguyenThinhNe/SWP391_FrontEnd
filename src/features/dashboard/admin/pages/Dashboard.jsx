@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Users, Buildings, Wrench, DotsThree, CalendarBlank, CaretLeft, CaretRight } from 'phosphor-react'
 import { useAdminApi } from '../../../../api/useAdminApi'
 import Loader from '../../../../components/Loader'
@@ -16,7 +15,6 @@ const StatsCard = ({ title, count, subtitle, icon: Icon }) => (
 )
 
 export default function Dashboard() {
-  const navigate = useNavigate()
   const { users, stats, loading, error } = useAdminApi()
   const [currentPage, setCurrentPage] = useState(1)
   const totalPages = 3
@@ -32,15 +30,24 @@ export default function Dashboard() {
   }))
 
   if (loading) return <Loader />
-  if (error) console.error("Dashboard error:", error)
+  
+  // Log data source for debugging
+  console.log("📊 Dashboard Data:", { 
+    totalUsers: users.length, 
+    hasError: !!error,
+    dataSource: error ? "Mock Data (API Failed)" : "Backend API",
+    stats 
+  })
 
   const toggleDropdown = (index) => {
     setOpenDropdown(openDropdown === index ? null : index)
   }
 
   const handleViewDetails = (userId) => {
-    navigate(`/admin/manage-users/${userId}`)
-    setOpenDropdown(null)
+    // TODO: Implement user detail page
+    console.log("View user details:", userId);
+    alert(`User Details for ID: ${userId}\n\nUser detail page coming soon!`);
+    setOpenDropdown(null);
   }
 
   return (
@@ -49,6 +56,11 @@ export default function Dashboard() {
         <div>
           <h1 className="text-[30px] font-semibold text-black mb-1">Hello, Admin!</h1>
           <p className="text-xl font-semibold text-[#929594]">Welcome to the System Dashboard.</p>
+          {error && (
+            <div className="mt-2 px-4 py-2 bg-yellow-100 border border-yellow-400 rounded-lg text-sm text-yellow-800 inline-flex items-center gap-2">
+              ⚠️ Using Mock Data - Backend Connection Failed
+            </div>
+          )}
         </div>
         
         <div className="flex items-center gap-3">
@@ -114,7 +126,7 @@ export default function Dashboard() {
                     {openDropdown === index && (
                       <div className="absolute right-8 top-12 z-10">
                         <button
-                          className="px-4 py-2 border border-[#E5E5E5] rounded-xl bg-white shadow-md text-[12px] font-medium text-black hover:bg-gray-50"
+                          className="px-6 py-3 border border-[#E5E5E5] rounded-xl bg-white shadow-md text-sm font-medium text-black hover:bg-gray-50 whitespace-nowrap"
                           onClick={() => handleViewDetails(user.id)}
                         >
                           View Details

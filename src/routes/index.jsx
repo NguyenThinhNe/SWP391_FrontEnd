@@ -23,7 +23,7 @@ const SCTechnicianProfilePage = lazy(() => import("../features/dashboard/sc-tech
 
 // Sc-Staff
 const SCStaffDashboardPage = lazy(() => import("../features/dashboard/sc-staff/pages/Dashboard"));
-const SCStaffRequestDetailPage = lazy(() => import("../features/dashboard/sc-staff/pages/WarrantyRequestDetail"))
+const SCStaffWarrantyRequestDetailPage = lazy(() => import("../features/dashboard/sc-staff/pages/WarrantyRequestDetail"));
 const SCStaffAssignWorkerPage = lazy(() => import("../features/dashboard/sc-staff/pages/AssignWorker"));
 const SCStaffReportPage = lazy(() => import("../features/dashboard/sc-staff/pages/WarrantyReport"));
 const SCStaffPartRequestPage = lazy(() => import("../features/dashboard/sc-staff/pages/PartRequests"));
@@ -89,6 +89,7 @@ const router = createBrowserRouter([
             { path: "part-request", element: <Suspense fallback={<Loader />}><SCStaffPartRequestPage /></Suspense> },
             { path: "report", element: <Suspense fallback={<Loader />}><SCStaffReportPage /></Suspense> },
             { path: "bill", element: <Suspense fallback={<Loader />}><SCStaffBillPage /></Suspense> },
+            { path: "warranty-request/:id", element: <Suspense fallback={<Loader />}><SCStaffWarrantyRequestDetailPage /></Suspense> },
             { path: "profile", element: <Suspense fallback={<Loader />}><SCStaffProfilePage /></Suspense> },
         ],
     },
