@@ -140,18 +140,20 @@ export const useWarrantyClaims = (userId) => {
             setLoading(true);
             setError(null);
 
-            console.log('🔍 [useWarrantyClaims] Fetching claim by ID:', id);
+            console.log('[useWarrantyClaims] Fetching claim by ID:', id);
             const response = await axiousInstance.get(`/claims/${id}`);
-            console.log('✅ [useWarrantyClaims] API response:', response);
             
             const claim = response.data?.data || response.data;
 
             if (!claim) {
-                console.error('❌ [useWarrantyClaims] No claim data in response');
+                console.error('[useWarrantyClaims] No claim data in response');
                 throw new Error("Claim not found");
             }
 
-            console.log('📦 [useWarrantyClaims] Raw claim data:', claim);
+            console.log('[useWarrantyClaims] Raw claim data:', claim);
+            console.log('[useWarrantyClaims] issueDescription from API:', claim.issueDescription);
+            console.log('[useWarrantyClaims] images from API:', claim.images);
+            console.log('[useWarrantyClaims] claimImages from API:', claim.claimImages);
 
             const formattedClaim = {
                 claimId: claim.claimId,
@@ -186,11 +188,15 @@ export const useWarrantyClaims = (userId) => {
                 technicianName: claim.technicianName,
                 images: claim.images || [],
                 action: claim.action,
+                actionType: claim.action ?? claim.actionType ?? claim.ActionType ?? 0, // Map actionType for edit page
                 actionDisplay: claim.actionDisplay,
             };
 
             setRow(formattedClaim);
-            console.log('✅ [useWarrantyClaims] Formatted claim set:', formattedClaim);
+            console.log('[useWarrantyClaims] Formatted claim set');
+            console.log('[useWarrantyClaims] Formatted issueDescription:', formattedClaim.issueDescription);
+            console.log('[useWarrantyClaims] Formatted images count:', formattedClaim.images?.length || 0);
+            console.log('[useWarrantyClaims] Formatted claimImages count:', formattedClaim.claimImages?.length || 0);
         } catch (err) {
             console.error("❌ [useWarrantyClaims] Fetch claim by ID failed:", err);
             console.error("❌ Error details:", {
@@ -235,42 +241,25 @@ export const useWarrantyClaims = (userId) => {
 
     const updateClaim = async (id, payload) => {
         try {
-            console.log("🔵 [useWarrantyClaims] updateClaim called");
-            console.log("📝 Claim ID:", id);
-            console.log("📦 Payload:", payload);
-            
             // Use PUT /claims/{id} to update claim (not /approve endpoint)
             const response = await axiousInstance.put(`/claims/${id}`, payload);
-            
-            console.log("✅ [useWarrantyClaims] Update response:", response);
-            console.log("✅ [useWarrantyClaims] Update response data:", JSON.stringify(response, null, 2));
             
             // Note: Axios interceptor returns response.data, not full response
             // If we reach here without error, update was successful
             const isSuccess = response !== null && response !== undefined && 
                              !response?.error && !response?.message?.includes('error');
             
-            console.log("✅ [useWarrantyClaims] Update successful:", isSuccess);
-            console.log("✅ [useWarrantyClaims] Response type:", typeof response);
-            
-            // Always refetch claims list after update (backend should have updated)
-            if (userId) {
-                console.log("🔄 [useWarrantyClaims] Refetching claims list after update...");
-                console.log("🔄 [useWarrantyClaims] UserId:", userId);
-                try {
-                    await fetchClaimsByTechnician(userId);
-                    console.log("✅ [useWarrantyClaims] Claims list refetched successfully");
-                } catch (fetchErr) {
-                    console.error("❌ [useWarrantyClaims] Failed to refetch claims:", fetchErr);
-                }
-            } else {
-                console.warn("⚠️ [useWarrantyClaims] No userId available to refetch claims");
+            if (!isSuccess) {
+                console.warn("[useWarrantyClaims] Update response may indicate failure:", response);
             }
+            
+            // Don't refetch here - let the page that navigates handle the refresh
+            // This prevents double refresh when navigating back to claims list
             
             return response;
         } catch (error) {
-            console.error("❌ [useWarrantyClaims] Update failed:", error);
-            console.error("❌ Error details:", {
+            console.error("[useWarrantyClaims] Update failed:", error);
+            console.error("Error details:", {
                 message: error.message,
                 status: error.response?.status,
                 data: error.response?.data,

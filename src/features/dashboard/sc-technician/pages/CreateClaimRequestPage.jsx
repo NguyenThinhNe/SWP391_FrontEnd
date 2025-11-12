@@ -429,12 +429,7 @@ export default function CreateClaimRequestsPage() {
             });
 
             const results = await Promise.all(uploadPromises);
-            // Add description field to each uploaded image
-            const imagesWithDescription = results.map(img => ({
-                ...img,
-                description: '', // Empty description by default
-            }));
-            setUploadedImages(prev => [...prev, ...imagesWithDescription]);
+            setUploadedImages(prev => [...prev, ...results]);
             
             // Also add to uploadedFiles for backward compatibility
             const newFiles = validFiles.map((file) => ({
@@ -495,19 +490,6 @@ export default function CreateClaimRequestsPage() {
         }
     };
 
-    // Update image description
-    const handleImageDescriptionChange = (index, description) => {
-        setUploadedImages(prev => {
-            const newImages = [...prev];
-            if (newImages[index]) {
-                newImages[index] = {
-                    ...newImages[index],
-                    description: description
-                };
-            }
-            return newImages;
-        });
-    };
 
     // Cleanup preview URLs on unmount
     useEffect(() => {
@@ -552,7 +534,6 @@ export default function CreateClaimRequestsPage() {
             claimImages: uploadedImages.map((img, index) => ({
               imageUrl: img.url,
               orderIndex: index,
-              description: img.description || '', // Use actual description from input
             }))
         };
         
@@ -895,57 +876,30 @@ export default function CreateClaimRequestsPage() {
                             </div>
                             {uploadedFiles.length > 0 ? (
                                 <div className="w-full mb-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-3 gap-4">
                                         {uploadedFiles.map((file, index) => (
-                                            <div key={index} className="border-2 border-gray-300 rounded-lg p-4">
-                                                <div className="flex gap-3">
-                                                    {/* Image Preview */}
-                                                    <div className="relative flex-shrink-0">
-                                                        {file.preview ? (
-                                                            <img 
-                                                                src={file.preview} 
-                                                                alt={file.name}
-                                                                className="w-24 h-24 object-cover rounded-md border-2 border-gray-300"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-24 h-24 bg-gray-200 rounded-md flex items-center justify-center">
-                                                                <PackageIcon size={24} color="#6B7280" />
-                                                            </div>
-                                                        )}
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleRemoveFile(index);
-                                                            }}
-                                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
-                                                        >
-                                                            ×
-                                                        </button>
+                                            <div key={index} className="relative group">
+                                                {file.preview ? (
+                                                    <img 
+                                                        src={file.preview} 
+                                                        alt={file.name}
+                                                        className="w-full aspect-[16/9] object-cover rounded-xl border-2 border-gray-300"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full aspect-[16/9] bg-gray-200 rounded-xl flex items-center justify-center">
+                                                        <PackageIcon size={24} color="#6B7280" />
                                                     </div>
-                                                    
-                                                    {/* Description Input */}
-                                                    <div className="flex-1">
-                                                        <div className="mb-2">
-                                                            <p className="text-xs text-gray-600 mb-1">File: {file.name}</p>
-                                                            <p className="text-xs text-gray-500">
-                                                                Size: {(file.size / 1024).toFixed(2)} KB
-                                                            </p>
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-sm font-medium text-gray-700 mb-1 block">
-                                                                Description
-                                                            </label>
-                                                            <textarea
-                                                                value={uploadedImages[index]?.description || ''}
-                                                                onChange={(e) => handleImageDescriptionChange(index, e.target.value)}
-                                                                placeholder="Add description for this image..."
-                                                                className="w-full p-2 border-2 border-gray-300 rounded-md text-sm focus:border-indigo-500 focus:outline-none resize-none"
-                                                                rows="2"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRemoveFile(index);
+                                                    }}
+                                                    className="absolute top-2 right-2 bg-white border border-gray-200 text-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-50 transition-colors"
+                                                >
+                                                    ×
+                                                </button>
                                             </div>
                                         ))}
                                     </div>
