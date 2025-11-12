@@ -76,6 +76,9 @@ const SCStaffBillPage = lazy(() =>
 const SCStaffProfilePage = lazy(() =>
   import("../features/dashboard/sc-staff/pages/Profile")
 );
+const SCStaffAssignToCampaignPage = lazy(() =>
+  import("../features/dashboard/sc-staff/pages/AssignWorkerToCampaign")
+);
 
 // EVM-Staff
 const EVMDashboardPage = lazy(() =>
@@ -269,6 +272,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<Loader />}>
             <SCStaffAssignWorkerPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "assign-campaign",
+        element: (
+          <Suspense fallback={<Loader />}>
+            <SCStaffAssignToCampaignPage />
           </Suspense>
         ),
       },

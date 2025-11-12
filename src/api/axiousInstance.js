@@ -37,6 +37,16 @@ axiosInstance.interceptors.request.use(
             console.log("🔑 [Axios] Has token:", !!token);
         }
         
+        // 🔍 Debug: Log campaign vehicle requests
+        if (config.url?.includes('/campaigns/') && config.url?.includes('/vehicles')) {
+            console.log("🚀 [Axios] Campaign vehicle request:");
+            console.log("   Method:", config.method?.toUpperCase());
+            console.log("   Full URL:", config.baseURL + config.url);
+            console.log("   Body:", config.data);
+            console.log("   Body type:", typeof config.data);
+            console.log("   Content-Type:", config.headers["Content-Type"]);
+        }
+        
         return config;
     },
     (error) => {
@@ -74,6 +84,22 @@ axiosInstance.interceptors.response.use(
         } else {
             console.error("API Error:", error);
         }
+        
+        // Handle 401 Unauthorized - Token expired or invalid
+        if (error.response?.status === 401) {
+            console.error("🔐 [Axios] 401 Unauthorized - Token expired or invalid");
+            console.error("🔐 [Axios] Clearing token and redirecting to login...");
+            
+            // Clear authentication data
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            
+            // Redirect to login page
+            if (!window.location.pathname.includes('/login')) {
+                window.location.href = '/login';
+            }
+        }
+        
         throw error;
     }
 );
