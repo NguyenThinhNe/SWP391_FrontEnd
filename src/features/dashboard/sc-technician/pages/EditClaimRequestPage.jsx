@@ -83,6 +83,8 @@ export default function EditClaimRequestsPage() {
         mileAge: "",
         issueDescription: "",
         claimDate: "",
+        serviceCenterName: "",
+        technicianName: "",
         actionType: 0, // Service Center Request
     });
     
@@ -137,6 +139,8 @@ export default function EditClaimRequestsPage() {
                 mileAge: row.mileAge || row.mileage || "",
                 issueDescription: row.issueDescription || "",
                 claimDate: formatDateForInput(row.claimDate),
+                serviceCenterName: row.serviceCenterName || "",
+                technicianName: row.technicianName || "",
                 actionType: row.actionType || 0, // Load actionType from data
             });
             
@@ -631,10 +635,16 @@ export default function EditClaimRequestsPage() {
                 }));
             }
             
-            // Format payload according to API requirements (Swagger schema: only 4 fields)
-            // Backend PUT /claims/{id} only accepts: vin, actionType, partItems, issueDescription
+            // Format payload according to API requirements
+            // Backend PUT /claims/{id} accepts: vin, actionType, partItems, issueDescription, and other fields
             const payload = {
                 vin: formData.vin || row?.vin || "",
+                vehicleName: formData.vehicleName || row?.vehicleName || "",
+                purchaseDate: formData.purchaseDate ? formatDateToISO(formData.purchaseDate) : null,
+                mileAge: formData.mileAge ? parseInt(formData.mileAge) : null,
+                claimDate: formData.claimDate ? formatDateToISO(formData.claimDate) : null,
+                serviceCenterName: formData.serviceCenterName || row?.serviceCenterName || "",
+                technicianName: formData.technicianName || row?.technicianName || "",
                 actionType: formData.actionType !== undefined ? formData.actionType : (row?.actionType || 0),
                 issueDescription: formData.issueDescription || "",
             };
@@ -847,30 +857,32 @@ export default function EditClaimRequestsPage() {
                                 <input
                                     type="date"
                                     name="claimDate"
-                                    readOnly={true}
-                                    className="p-3 bg-[#F9FAFB] border-[3px] border-[#EBEBEB] rounded-2xl w-full focus:border-[#c6d2ff] focus:outline-none"
+                                    className="p-3 bg-white border-[3px] border-[#EBEBEB] rounded-2xl w-full focus:border-[#c6d2ff] focus:outline-none"
                                     placeholder="Claim Date"
                                     value={formData.claimDate}
-                                    aria-disabled
+                                    onChange={handleInputChange}
                                 />
                             </div>
                             <div className="w-full">
                                 <p className="text-sm mb-2 text-[#6B716F]">Service Center</p>
                                 <input
-                                    readOnly={true}
-                                    className="p-3 bg-[#F9FAFB] border-[3px] border-[#EBEBEB] rounded-2xl w-full focus:border-[#c6d2ff] focus:outline-none"
+                                    type="text"
+                                    name="serviceCenterName"
+                                    className="p-3 bg-white border-[3px] border-[#EBEBEB] rounded-2xl w-full focus:border-[#c6d2ff] focus:outline-none"
                                     placeholder="Service Center"
-                                    defaultValue={row?.serviceCenterName}
-                                    aria-disabled
+                                    value={formData.serviceCenterName}
+                                    onChange={handleInputChange}
                                 />
                             </div>
                             <div className="w-full">
                                 <p className="text-sm mb-2 text-[#6B716F]">Created By</p>
                                 <input
-                                    readOnly={true}
-                                    className="p-3 bg-[#F9FAFB] border-[3px] border-[#EBEBEB] rounded-2xl w-full focus:border-[#c6d2ff] focus:outline-none"
+                                    type="text"
+                                    name="technicianName"
+                                    className="p-3 bg-white border-[3px] border-[#EBEBEB] rounded-2xl w-full focus:border-[#c6d2ff] focus:outline-none"
                                     placeholder="Created By"
-                                    defaultValue={row?.technicianName}
+                                    value={formData.technicianName}
+                                    onChange={handleInputChange}
                                 />
                             </div>
                         </div>
@@ -886,11 +898,10 @@ export default function EditClaimRequestsPage() {
                                 <input
                                     type="text"
                                     name="vin"
-                                    readOnly={true}
-                                    className="p-3 bg-[#F9FAFB] border-[3px] border-[#EBEBEB] rounded-2xl w-full focus:border-[#c6d2ff] focus:outline-none"
+                                    className="p-3 bg-white border-[3px] border-[#EBEBEB] rounded-2xl w-full focus:border-[#c6d2ff] focus:outline-none"
                                     placeholder="VIN code"
                                     value={formData.vin}
-                                    aria-disabled
+                                    onChange={handleInputChange}
                                 />
                             </div>
                             <div className="w-full">
@@ -898,11 +909,10 @@ export default function EditClaimRequestsPage() {
                                 <input
                                     type="text"
                                     name="vehicleName"
-                                    readOnly={true}
-                                    className="p-3 bg-[#F9FAFB] border-[3px] border-[#EBEBEB] rounded-2xl w-full focus:border-[#c6d2ff] focus:outline-none"
+                                    className="p-3 bg-white border-[3px] border-[#EBEBEB] rounded-2xl w-full focus:border-[#c6d2ff] focus:outline-none"
                                     placeholder="Enter vehicle name"
                                     value={formData.vehicleName}
-                                    aria-disabled
+                                    onChange={handleInputChange}
                                 />
                             </div>
                             <div className="w-full">
@@ -912,11 +922,10 @@ export default function EditClaimRequestsPage() {
                                 <input
                                     type="date"
                                     name="purchaseDate"
-                                    readOnly={true}
-                                    className="p-3 bg-[#F9FAFB] border-[3px] border-[#EBEBEB] rounded-2xl w-full focus:border-[#c6d2ff] focus:outline-none"
+                                    className="p-3 bg-white border-[3px] border-[#EBEBEB] rounded-2xl w-full focus:border-[#c6d2ff] focus:outline-none"
                                     placeholder="Purchase Date of vehicle"
                                     value={formData.purchaseDate}
-                                    aria-disabled
+                                    onChange={handleInputChange}
                                 />
                             </div>
                             <div className="w-full">
@@ -926,11 +935,10 @@ export default function EditClaimRequestsPage() {
                                 <input
                                     type="number"
                                     name="mileAge"
-                                    readOnly={true}
-                                    className="p-3 bg-[#F9FAFB] border-[3px] border-[#EBEBEB] rounded-2xl w-full focus:border-[#c6d2ff] focus:outline-none"
+                                    className="p-3 bg-white border-[3px] border-[#EBEBEB] rounded-2xl w-full focus:border-[#c6d2ff] focus:outline-none"
                                     placeholder="Current Mileage (km)"
                                     value={formData.mileAge}
-                                    aria-disabled
+                                    onChange={handleInputChange}
                                 />
                             </div>
                         </div>
