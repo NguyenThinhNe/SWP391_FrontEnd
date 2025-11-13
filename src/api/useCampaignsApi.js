@@ -24,21 +24,8 @@ export const useCampaignsApi = (userId) => {
             setLoading(true);
             setError(null);
 
-            let response;
-            let endpointUsed = '';
-            
-            try {
-                response = await axiousInstance.get('/campaigns/active');
-                endpointUsed = '/campaigns/active';
-            } catch (err1) {
-                try {
-                    response = await axiousInstance.get(`/campaigns/service-center/${userId}`);
-                    endpointUsed = `/campaigns/service-center/${userId}`;
-                } catch (err2) {
-                    response = await axiousInstance.get('/campaigns');
-                    endpointUsed = '/campaigns';
-                }
-            }
+            // Use GET /campaigns endpoint
+            const response = await axiousInstance.get('/campaigns');
 
             const data = Array.isArray(response)
                 ? response
@@ -51,19 +38,17 @@ export const useCampaignsApi = (userId) => {
 
             const plainData = JSON.parse(JSON.stringify(data));
             
-            let filteredData = plainData;
-            if (endpointUsed === '/campaigns' || endpointUsed === '/campaigns/active') {
-                filteredData = plainData.filter(camp => {
-                    const campServiceCenter = camp.serviceCenterId || camp.serviceCenterID || 
-                                             camp.service_center_id || camp.ServiceCenterId;
-                    
-                    if (!campServiceCenter) {
-                        return true;
-                    }
-                    
-                    return campServiceCenter === userId;
-                });
-            }
+            // Filter by service center ID
+            const filteredData = plainData.filter(camp => {
+                const campServiceCenter = camp.serviceCenterId || camp.serviceCenterID || 
+                                         camp.service_center_id || camp.ServiceCenterId;
+                
+                if (!campServiceCenter) {
+                    return true;
+                }
+                
+                return campServiceCenter === userId;
+            });
 
             const formattedCampaigns = filteredData.map((camp) => {
                 const plainCamp = JSON.parse(JSON.stringify(camp));
