@@ -318,7 +318,12 @@ export default function AssignWorkerToCampaign() {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Fetch campaigns, technicians, and vehicles
-  const { campaigns, loading: campaignsLoading, refetch } = useCampaignsApi(user?.serviceCenterId);
+  const {
+    campaigns,
+    loading: campaignsLoading,
+    refetch,
+    applyCampaignTechnicianUpdate,
+  } = useCampaignsApi(user?.serviceCenterId);
   const { technicians, loading: techniciansLoading } = useTechnicians();
   const { vehicles, vehicleLoading } = useVehicleApi();
 
@@ -340,9 +345,23 @@ export default function AssignWorkerToCampaign() {
 
   const filters = CAMPAIGN_FILTERS;
 
+  // Enrich campaigns with technician names from technicians list
+  const enrichedCampaigns = useMemo(() => {
+    return campaigns.map(campaign => {
+      if (campaign.technicianId && campaign.technicianName === "Unassigned") {
+        // Backend didn't return technicianName, lookup from technicians list
+        const tech = technicians.find(t => t.id === campaign.technicianId);
+        if (tech) {
+          return { ...campaign, technicianName: tech.name };
+        }
+      }
+      return campaign;
+    });
+  }, [campaigns, technicians]);
+
   // Filter campaigns by status and search term
   const displayCampaigns = useMemo(() => {
-    let result = campaigns;
+    let result = enrichedCampaigns;
 
     // Filter by status
     if (activeFilter !== "All") {
@@ -358,7 +377,7 @@ export default function AssignWorkerToCampaign() {
     }
 
     return result;
-  }, [campaigns, activeFilter, searchTerm]);
+  }, [enrichedCampaigns, activeFilter, searchTerm]);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -407,15 +426,59 @@ export default function AssignWorkerToCampaign() {
   // Handle assign technician
   const handleAssignTechnician = async (campaign, technician) => {
     try {
+      console.group('🔵 Assigning technician to campaign');
+      console.log('📋 Campaign:', {
+        id: campaign.campaignId,
+        name: campaign.campaignName,
+        status: campaign.status,
+        vehicleCount: campaign.vehicleCount,
+        serviceCenterId: campaign.serviceCenterId,
+        currentTechnicianId: campaign.technicianId
+      });
+      console.log('👤 Technician:', {
+        id: technician.id,
+        name: technician.name,
+        serviceCenterId: technician.serviceCenterId,
+        assignedTasks: technician.assignedTasks
+      });
+      console.log('🔐 User:', {
+        serviceCenterId: user?.serviceCenterId
+      });
+      console.groupEnd();
+      
       // Validate campaign has vehicles
       if (!campaign.vehicleCount || campaign.vehicleCount === 0) {
         throw new Error('Campaign must have vehicles before assigning technician');
       }
+
+      // Check if technician is already assigned to another active campaign
+      const technicianCurrentCampaigns = enrichedCampaigns.filter(c => 
+        c.technicianId === technician.id && 
+        c.campaignId !== campaign.campaignId &&
+        c.status === 2 // Active status
+      );
+
+      if (technicianCurrentCampaigns.length > 0) {
+        const assignedCampaignNames = technicianCurrentCampaigns.map(c => c.campaignName).join(', ');
+        setNotification({
+          type: 'error',
+          message: 'Worker not available',
+          subText: `${technician.name} is already assigned to active campaign(s): ${assignedCampaignNames}`
+        });
+        return;
+      }
+      
+      console.log(`🌐 POST /campaigns/${campaign.campaignId}/technicians/${technician.id}`);
       
       // Backend endpoint: POST /api/campaigns/{id}/technicians/{technicianId}
-      const response = await axiosInstance.post(
+      // No body needed - IDs are in the URL path
+      await axiosInstance.post(
         `/campaigns/${campaign.campaignId}/technicians/${technician.id}`
       );
+      
+      console.log('✅ Technician assigned successfully');
+
+      applyCampaignTechnicianUpdate(campaign.campaignId, technician);
 
       closeAssignModal();
       
@@ -425,10 +488,10 @@ export default function AssignWorkerToCampaign() {
         subText: `${technician.name} has been assigned to ${campaign.campaignName}`
       });
 
-      // Refetch campaigns to get updated data
+      // Refetch campaigns shortly after backend updates
       setTimeout(() => {
         refetch();
-      }, 500);
+      }, 300);
     } catch (error) {
       console.error("❌ Assign technician failed:", error);
       
@@ -440,8 +503,8 @@ export default function AssignWorkerToCampaign() {
         const backendMessage = error.response.data.message;
         
         if (backendMessage.includes('not available')) {
-          errorMessage = 'Technician not available';
-          errorSubText = 'This technician may already be assigned to another campaign during this period, or campaign status does not allow assignment.';
+          errorMessage = 'Worker not available';
+          errorSubText = 'This technician is already assigned to another active campaign or not available during this period.';
         } else if (backendMessage.includes('not found')) {
           errorMessage = 'Campaign or Technician not found';
           errorSubText = 'Please refresh the page and try again.';

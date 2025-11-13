@@ -27,6 +27,7 @@ export function useTechnicians() {
         const mappedTechnicians = techList.map((tech) => ({
           id: tech.userId || tech.id,
           name: tech.name || tech.userName || 'Unknown',
+          serviceCenterId: tech.serviceCenterId,
           assignedTasks: tech.assignedTasksCount || 0,
           avatar: tech.avatarUrl || null,
           status: tech.status || 'Available',

@@ -37,16 +37,6 @@ axiosInstance.interceptors.request.use(
             console.log("🔑 [Axios] Has token:", !!token);
         }
         
-        // 🔍 Debug: Log campaign vehicle requests
-        if (config.url?.includes('/campaigns/') && config.url?.includes('/vehicles')) {
-            console.log("🚀 [Axios] Campaign vehicle request:");
-            console.log("   Method:", config.method?.toUpperCase());
-            console.log("   Full URL:", config.baseURL + config.url);
-            console.log("   Body:", config.data);
-            console.log("   Body type:", typeof config.data);
-            console.log("   Content-Type:", config.headers["Content-Type"]);
-        }
-        
         return config;
     },
     (error) => {
@@ -57,12 +47,6 @@ axiosInstance.interceptors.request.use(
 // Optional interceptors for auth / errors
 axiosInstance.interceptors.response.use(
     (response) => {
-        // 🔍 Debug: Log successful responses for PUT requests
-        if (response.config?.method?.toUpperCase() === 'PUT' && response.config?.url?.includes('/claims/')) {
-            console.log("✅ [Axios] PUT request successful");
-            console.log("📥 [Axios] Response status:", response.status);
-            console.log("📥 [Axios] Response data:", response.data);
-        }
         return response.data;
     },
     (error) => {
@@ -81,6 +65,16 @@ axiosInstance.interceptors.response.use(
             }
             
             console.error("❌ [Axios] Error message:", error.message);
+        } else if (error.config?.url?.includes('/campaigns/') && error.config?.url?.includes('/technicians/')) {
+            // Campaign technician assignment errors
+            console.error("❌ [Axios] Technician assignment failed");
+            console.error("❌ [Axios] Error status:", error.response?.status);
+            console.error("❌ [Axios] Error data:", error.response?.data);
+            console.error("❌ [Axios] Error message:", error.response?.data?.message || error.message);
+            
+            if (error.response?.data?.errors) {
+                console.error("📋 [Axios] Validation errors:", error.response.data.errors);
+            }
         } else {
             console.error("API Error:", error);
         }
