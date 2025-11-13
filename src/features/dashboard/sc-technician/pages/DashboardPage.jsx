@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { CheckCircleIcon, CaretLeftIcon, CaretRightIcon, ListDashesIcon, ListIcon, CaretDownIcon, PlusIcon } from '@phosphor-icons/react'
 import StatusCard from '../../../../components/StatusCard'
 import { useWarrantyClaims } from '../../../../api/useWarrantyClaims'
@@ -20,22 +20,22 @@ export default function Dashboard() {
 
   const { rows = [], loading, error, fetchClaimsByTechnician } = useWarrantyClaims(user?.userId);
   const { workRows = [], workLoading, workError } = useTodoWorksApi(user?.userId);
+  const processedRefreshKeyRef = useRef(null);
 
   // 🔄 Refetch claims when navigating back to dashboard (e.g., after deleting a claim)
   useEffect(() => {
-    if (user?.userId && fetchClaimsByTechnician) {
-      // Refetch when location changes (user navigates back to dashboard)
-      const shouldRefresh = location.state?.refresh || location.key;
-      if (shouldRefresh) {
+    if (user?.userId && fetchClaimsByTechnician && location.state?.refresh) {
+      // Use location.key to track if we've already processed this navigation
+      if (processedRefreshKeyRef.current !== location.key) {
         console.log("🔄 [Dashboard] Refreshing claims list...");
+        processedRefreshKeyRef.current = location.key;
         fetchClaimsByTechnician(user.userId);
-        // Clear refresh flag if it exists
-        if (location.state?.refresh) {
-          navigate(location.pathname, { replace: true, state: {} });
-        }
+        // Clear refresh flag immediately to prevent infinite loop
+        navigate(location.pathname, { replace: true, state: {} });
       }
     }
-  }, [location.key, user?.userId, fetchClaimsByTechnician, navigate, location.pathname, location.state]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key, user?.userId, fetchClaimsByTechnician]);
 
   const totalClaims = rows.filter(r => r.isActive === true).length;
   const acceptedClaims = rows.filter(r => r.claimStatus === "Accepted").length;
