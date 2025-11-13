@@ -30,11 +30,9 @@ axiosInstance.interceptors.request.use(
             delete config.headers["Content-Type"];
         }
         
-        // 🔍 Debug: Log outgoing requests
+        // 🔍 Debug: Log outgoing requests (simplified)
         if (config.method?.toUpperCase() === 'PUT' && config.url?.includes('/claims/')) {
-            console.log("🚀 [Axios] Sending PUT request to:", config.url);
-            console.log("📦 [Axios] Request data:", config.data);
-            console.log("🔑 [Axios] Has token:", !!token);
+            console.log("[Axios] PUT request:", config.url);
         }
         
         return config;
@@ -47,11 +45,9 @@ axiosInstance.interceptors.request.use(
 // Optional interceptors for auth / errors
 axiosInstance.interceptors.response.use(
     (response) => {
-        // 🔍 Debug: Log successful responses for PUT requests
+        // 🔍 Debug: Log successful responses for PUT requests (simplified)
         if (response.config?.method?.toUpperCase() === 'PUT' && response.config?.url?.includes('/claims/')) {
-            console.log("✅ [Axios] PUT request successful");
-            console.log("📥 [Axios] Response status:", response.status);
-            console.log("📥 [Axios] Response data:", response.data);
+            console.log("[Axios] PUT response:", response.config.url, "-", response.status, response.statusText);
         }
         return response.data;
     },

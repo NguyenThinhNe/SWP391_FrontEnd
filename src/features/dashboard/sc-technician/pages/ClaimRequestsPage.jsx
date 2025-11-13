@@ -221,7 +221,10 @@ export default function ClaimRequestsPage() {
                 <th className="text-left px-8 py-3 text-base font-medium text-[#686262]">
                   Status
                 </th>
-                <th className="text-left px-8 py-3 text-base font-medium text-[#686262]">
+                <th className="text-left px-8 py-3 text-base font-medium text-[#686262] whitespace-nowrap">
+                  Created By
+                </th>
+                <th className="text-left px-8 py-3 text-base font-medium text-[#686262] whitespace-nowrap">
                   Request Date
                 </th>
                 <th className="text-left rounded-tr-2xl px-8 py-3 text-base font-medium text-[#686262]">
@@ -258,6 +261,9 @@ export default function ClaimRequestsPage() {
                       <StatusDot status={r.claimStatus} />
                       <span>{r.claimStatus}</span>
                     </div>
+                  </td>
+                  <td className="px-8 py-3 text-[13px] font-medium text-black">
+                    {r.technicianName || "N/A"}
                   </td>
                   <td className="px-8 py-3 text-[13px] font-medium text-black">
                     {r.claimDate}

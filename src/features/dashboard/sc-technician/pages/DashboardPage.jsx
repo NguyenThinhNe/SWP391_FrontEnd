@@ -1,15 +1,16 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { CheckCircleIcon, CaretLeftIcon, CaretRightIcon, ListDashesIcon, ListIcon, CaretDownIcon, PlusIcon } from '@phosphor-icons/react'
 import StatusCard from '../../../../components/StatusCard'
 import { useWarrantyClaims } from '../../../../api/useWarrantyClaims'
 import Loader from '../../../../components/Loader'
 import StatusDot from '../components/ClaimStatusDot'
 import { useAuth } from '../../../../app/AuthProvider'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useTodoWorksApi } from '../../../../api/useTodoWorksApi'
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentPage, setCurrentPage] = useState(1)
   const totalPages = 4
 
@@ -17,8 +18,24 @@ export default function Dashboard() {
   const displayName = user?.userName || user?.name || user?.fullName || "User";
   console.log("User object:", user)
 
-  const { rows = [], loading, error } = useWarrantyClaims(user?.userId);
+  const { rows = [], loading, error, fetchClaimsByTechnician } = useWarrantyClaims(user?.userId);
   const { workRows = [], workLoading, workError } = useTodoWorksApi(user?.userId);
+
+  // 🔄 Refetch claims when navigating back to dashboard (e.g., after deleting a claim)
+  useEffect(() => {
+    if (user?.userId && fetchClaimsByTechnician) {
+      // Refetch when location changes (user navigates back to dashboard)
+      const shouldRefresh = location.state?.refresh || location.key;
+      if (shouldRefresh) {
+        console.log("🔄 [Dashboard] Refreshing claims list...");
+        fetchClaimsByTechnician(user.userId);
+        // Clear refresh flag if it exists
+        if (location.state?.refresh) {
+          navigate(location.pathname, { replace: true, state: {} });
+        }
+      }
+    }
+  }, [location.key, user?.userId, fetchClaimsByTechnician, navigate, location.pathname, location.state]);
 
   const totalClaims = rows.filter(r => r.isActive === true).length;
   const acceptedClaims = rows.filter(r => r.claimStatus === "Accepted").length;
@@ -103,13 +120,18 @@ export default function Dashboard() {
                 <th className="text-left px-8 py-3 text-base font-medium text-[#686262]">
                   Status
                 </th>
-                <th className="text-left px-8 py-3 text-base font-medium text-[#686262]">
+                <th className="text-left px-8 py-3 text-base font-medium text-[#686262] whitespace-nowrap">
+                  Created By
+                </th>
+                <th className="text-left px-8 py-3 text-base font-medium text-[#686262] whitespace-nowrap">
                   Request Date
                 </th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {rows
+                .filter((r) => r.isActive === true)
+                .map((r) => (
                 <tr
                   key={r.claimId}
                   className="border-b-2 border-[#DEE1E6] bg-white hover:bg-gray-50"
@@ -128,6 +150,9 @@ export default function Dashboard() {
                       <StatusDot status={r.claimStatus} />
                       <span>{r.claimStatus}</span>
                     </div>
+                  </td>
+                  <td className="px-8 py-3 text-[13px] font-medium text-black">
+                    {r.technicianName || "N/A"}
                   </td>
                   <td className="px-8 py-3 text-[13px] font-medium text-black">
                     {r.claimDate}

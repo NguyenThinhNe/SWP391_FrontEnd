@@ -5,7 +5,7 @@ import { useAuth } from "../../../../app/AuthProvider";
 // Delete confirmation modal (rendered at bottom)
 function DeleteModal({ row, onCancel, onSuccess, onError }) {
   const { user } = useAuth();
-  const { deleteClaim } = useWarrantyClaims(user?.userId);
+  const { deleteClaim, fetchClaimsByTechnician } = useWarrantyClaims(user?.userId);
   const [loading, setLoading] = useState(false);
 
   if (!row) return null;
@@ -15,6 +15,10 @@ function DeleteModal({ row, onCancel, onSuccess, onError }) {
     try {
       const result = await deleteClaim(row.claimId);
       if (result.success) {
+        // Refetch claims list to update the UI
+        if (user?.userId && fetchClaimsByTechnician) {
+          await fetchClaimsByTechnician(user.userId);
+        }
         onSuccess();
       } else {
         onError("Server returned an error response.");
