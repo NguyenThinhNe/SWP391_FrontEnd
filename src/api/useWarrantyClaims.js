@@ -140,18 +140,20 @@ export const useWarrantyClaims = (userId) => {
             setLoading(true);
             setError(null);
 
-            console.log('🔍 [useWarrantyClaims] Fetching claim by ID:', id);
+            console.log('[useWarrantyClaims] Fetching claim by ID:', id);
             const response = await axiousInstance.get(`/claims/${id}`);
-            console.log('✅ [useWarrantyClaims] API response:', response);
             
             const claim = response.data?.data || response.data;
 
             if (!claim) {
-                console.error('❌ [useWarrantyClaims] No claim data in response');
+                console.error('[useWarrantyClaims] No claim data in response');
                 throw new Error("Claim not found");
             }
 
-            console.log('📦 [useWarrantyClaims] Raw claim data:', claim);
+            console.log('[useWarrantyClaims] Raw claim data:', claim);
+            console.log('[useWarrantyClaims] issueDescription from API:', claim.issueDescription);
+            console.log('[useWarrantyClaims] images from API:', claim.images);
+            console.log('[useWarrantyClaims] claimImages from API:', claim.claimImages);
 
             const formattedClaim = {
                 claimId: claim.claimId,
@@ -186,11 +188,15 @@ export const useWarrantyClaims = (userId) => {
                 technicianName: claim.technicianName,
                 images: claim.images || [],
                 action: claim.action,
+                actionType: claim.action ?? claim.actionType ?? claim.ActionType ?? 0, // Map actionType for edit page
                 actionDisplay: claim.actionDisplay,
             };
 
             setRow(formattedClaim);
-            console.log('✅ [useWarrantyClaims] Formatted claim set:', formattedClaim);
+            console.log('[useWarrantyClaims] Formatted claim set');
+            console.log('[useWarrantyClaims] Formatted issueDescription:', formattedClaim.issueDescription);
+            console.log('[useWarrantyClaims] Formatted images count:', formattedClaim.images?.length || 0);
+            console.log('[useWarrantyClaims] Formatted claimImages count:', formattedClaim.claimImages?.length || 0);
         } catch (err) {
             console.error("❌ [useWarrantyClaims] Fetch claim by ID failed:", err);
             console.error("❌ Error details:", {
@@ -267,10 +273,13 @@ export const useWarrantyClaims = (userId) => {
                 console.warn("⚠️ [useWarrantyClaims] No userId available to refetch claims");
             }
             
+            // Don't refetch here - let the page that navigates handle the refresh
+            // This prevents double refresh when navigating back to claims list
+            
             return response;
         } catch (error) {
-            console.error("❌ [useWarrantyClaims] Update failed:", error);
-            console.error("❌ Error details:", {
+            console.error("[useWarrantyClaims] Update failed:", error);
+            console.error("Error details:", {
                 message: error.message,
                 status: error.response?.status,
                 data: error.response?.data,

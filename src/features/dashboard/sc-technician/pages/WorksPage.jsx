@@ -126,7 +126,7 @@ export default function TodoWorks() {
       </div>
 
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[25px] font-semibold mb-6">Work Orders (8)</h2>
+        <h2 className="text-[25px] font-semibold mb-6">Work Orders ({totalWorks})</h2>
       </div>
 
       <div className="flex gap-5 flex-wrap w-full justify-between mb-4">
