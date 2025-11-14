@@ -65,18 +65,18 @@ export default function ClaimRequestsPage() {
 
   // ⚠️ CRITICAL: Declare user BEFORE using it in useEffect
   const { user } = useAuth();
-  const { rows, loading, error, fetchClaims } = useWarrantyClaims(user?.userId);
+  const { rows, loading, error, fetchClaimsByTechnician } = useWarrantyClaims(user?.userId);
 
   // 🔄 Refetch claims when returning from edit page
   useEffect(() => {
-    if (location.state?.refresh && user?.userId && fetchClaims) {
+    if (location.state?.refresh && user?.userId && fetchClaimsByTechnician) {
       console.log("🔄 [ClaimRequestsPage] Refreshing claims list after edit...");
       console.log("🔄 [ClaimRequestsPage] Refresh timestamp:", location.state?.timestamp);
       
       // Delay slightly to ensure backend has processed
       setTimeout(async () => {
         try {
-          await fetchClaims(user?.userId);
+          await fetchClaimsByTechnician(user?.userId);
           console.log("✅ [ClaimRequestsPage] Claims list refreshed successfully");
         } catch (err) {
           console.error("❌ [ClaimRequestsPage] Failed to refresh claims:", err);
@@ -86,7 +86,7 @@ export default function ClaimRequestsPage() {
       // Clear the refresh flag to prevent unnecessary refetches
       navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location.state, user?.userId, fetchClaims, navigate, location.pathname]);
+  }, [location.state, user?.userId, fetchClaimsByTechnician, navigate, location.pathname]);
 
   const totalClaims = rows.filter(r => r.isActive === true).length;
   const pendingClaims = rows.filter((r) => r.claimStatus === "Pending" && r.isActive === true).length;
@@ -95,10 +95,42 @@ export default function ClaimRequestsPage() {
   const overdueClaims = rows.filter((r) => r.claimStatus === "Overdue" && r.isActive === true).length;
 
   if (loading) return <Loader />;
-  if (error)
+  if (error) {
+    // Check for specific error codes
+    const errorCode = error.response?.status || error.code;
+    const isNetworkError = errorCode === 523 || errorCode === 'ECONNREFUSED' || errorCode === 'NETWORK_ERROR';
+    
     return (
-      <p className="text-red-500">Error loading claims: {error.message}</p>
+      <div className="w-full flex items-center justify-center min-h-[400px]">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-red-600 mb-2">
+            {isNetworkError ? "Không thể kết nối đến server" : "Lỗi tải dữ liệu"}
+          </h2>
+          <p className="text-gray-600 mb-4">
+            {isNetworkError 
+              ? "Backend server hiện không thể truy cập được. Vui lòng thử lại sau hoặc liên hệ admin."
+              : `Error loading claims: ${error.message || error.response?.statusText || 'Unknown error'}`}
+          </p>
+          {errorCode && (
+            <p className="text-sm text-gray-500 mb-4">
+              Error Code: {errorCode}
+            </p>
+          )}
+          <button
+            onClick={() => {
+              if (user?.userId && fetchClaimsByTechnician) {
+                fetchClaimsByTechnician(user.userId);
+              }
+            }}
+            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full transition-all cursor-pointer"
+          >
+            🔄 Thử lại
+          </button>
+        </div>
+      </div>
     );
+  }
 
   return (
     <div className="w-full">
@@ -189,7 +221,10 @@ export default function ClaimRequestsPage() {
                 <th className="text-left px-8 py-3 text-base font-medium text-[#686262]">
                   Status
                 </th>
-                <th className="text-left px-8 py-3 text-base font-medium text-[#686262]">
+                <th className="text-left px-8 py-3 text-base font-medium text-[#686262] whitespace-nowrap">
+                  Created By
+                </th>
+                <th className="text-left px-8 py-3 text-base font-medium text-[#686262] whitespace-nowrap">
                   Request Date
                 </th>
                 <th className="text-left rounded-tr-2xl px-8 py-3 text-base font-medium text-[#686262]">
@@ -200,6 +235,13 @@ export default function ClaimRequestsPage() {
             <tbody>
               {rows
                 .filter((r) => r.isActive)
+                .sort((a, b) => {
+                  // Sort by claimDate: newest first (null dates go to end)
+                  if (!a.claimDate && !b.claimDate) return 0;
+                  if (!a.claimDate) return 1;
+                  if (!b.claimDate) return -1;
+                  return new Date(b.claimDate) - new Date(a.claimDate);
+                })
                 .map((r) => (
                 <tr
                   key={r.claimId}
@@ -219,6 +261,9 @@ export default function ClaimRequestsPage() {
                       <StatusDot status={r.claimStatus} />
                       <span>{r.claimStatus}</span>
                     </div>
+                  </td>
+                  <td className="px-8 py-3 text-[13px] font-medium text-black">
+                    {r.technicianName || "N/A"}
                   </td>
                   <td className="px-8 py-3 text-[13px] font-medium text-black">
                     {r.claimDate}

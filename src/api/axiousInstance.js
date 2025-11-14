@@ -30,11 +30,9 @@ axiosInstance.interceptors.request.use(
             delete config.headers["Content-Type"];
         }
         
-        // 🔍 Debug: Log outgoing requests
+        // 🔍 Debug: Log outgoing requests (simplified)
         if (config.method?.toUpperCase() === 'PUT' && config.url?.includes('/claims/')) {
-            console.log("🚀 [Axios] Sending PUT request to:", config.url);
-            console.log("📦 [Axios] Request data:", config.data);
-            console.log("🔑 [Axios] Has token:", !!token);
+            console.log("[Axios] PUT request:", config.url);
         }
         
         return config;
