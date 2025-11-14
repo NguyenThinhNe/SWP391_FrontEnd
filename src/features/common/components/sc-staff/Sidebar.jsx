@@ -77,6 +77,13 @@ export default function Sidebar() {
           </div>
           <div className="py-0">
             <NavItem
+              to="/sc-staff/assign-campaign"
+              icon={WrenchIcon}
+              label="Assign Campaign"
+            />
+          </div>
+          <div className="py-0">
+            <NavItem
               to="/sc-staff/part-request"
               icon={WrenchIcon}
               label="Part Request"

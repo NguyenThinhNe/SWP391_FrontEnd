@@ -45,10 +45,6 @@ axiosInstance.interceptors.request.use(
 // Optional interceptors for auth / errors
 axiosInstance.interceptors.response.use(
     (response) => {
-        // 🔍 Debug: Log successful responses for PUT requests (simplified)
-        if (response.config?.method?.toUpperCase() === 'PUT' && response.config?.url?.includes('/claims/')) {
-            console.log("[Axios] PUT response:", response.config.url, "-", response.status, response.statusText);
-        }
         return response.data;
     },
     (error) => {
@@ -67,9 +63,35 @@ axiosInstance.interceptors.response.use(
             }
             
             console.error("❌ [Axios] Error message:", error.message);
+        } else if (error.config?.url?.includes('/campaigns/') && error.config?.url?.includes('/technicians/')) {
+            // Campaign technician assignment errors
+            console.error("❌ [Axios] Technician assignment failed");
+            console.error("❌ [Axios] Error status:", error.response?.status);
+            console.error("❌ [Axios] Error data:", error.response?.data);
+            console.error("❌ [Axios] Error message:", error.response?.data?.message || error.message);
+            
+            if (error.response?.data?.errors) {
+                console.error("📋 [Axios] Validation errors:", error.response.data.errors);
+            }
         } else {
             console.error("API Error:", error);
         }
+        
+        // Handle 401 Unauthorized - Token expired or invalid
+        if (error.response?.status === 401) {
+            console.error("🔐 [Axios] 401 Unauthorized - Token expired or invalid");
+            console.error("🔐 [Axios] Clearing token and redirecting to login...");
+            
+            // Clear authentication data
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            
+            // Redirect to login page
+            if (!window.location.pathname.includes('/login')) {
+                window.location.href = '/login';
+            }
+        }
+        
         throw error;
     }
 );
